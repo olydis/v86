@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "alwaysStrict": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "outDir": "build/src"
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}
