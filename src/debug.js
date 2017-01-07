@@ -15,7 +15,7 @@ CPU.prototype.debug_init = function()
     debug.ops = undefined;
     debug.all_ops = [];
 
-    debug.trace_all = false;
+    debug.trace_all = true;
 
     // "log" some information visually to the user.
     // Also in non-DEBUG modes

@@ -1,5 +1,7 @@
 // load all files to run v86 in browser, uncompiled
 
+var loadFinished;
+
 (function()
 {
     var CORE_FILES =
@@ -43,6 +45,8 @@
 
         if(!s)
         {
+            if (loadFinished)
+                loadFinished();
             return;
         }
 

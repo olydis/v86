@@ -159,6 +159,11 @@ function ScreenAdapter(screen_container, bus)
         this.put_char(data[0], data[1], data[2], data[3], data[4]);
     }, this);
 
+    bus.register("screen-text-scroll", function(rows)
+    {
+        console.log("scroll", rows);
+    }, this);
+
     bus.register("screen-update-cursor", function(data)
     {
         this.update_cursor(data[0], data[1]);
@@ -216,6 +221,31 @@ function ScreenAdapter(screen_container, bus)
 
     function update_text()
     {
+        //var max_consecutive = 0;
+        //var consecutive = 0;
+        //for(var i = 0; i < text_mode_height; i++)
+        //{
+        //    if(changed_rows[i])
+        //    {
+        //        if(consecutive === max_consecutive)
+        //            max_consecutive++;
+        //        consecutive++;
+        //    }
+        //    else
+        //    {
+        //        consecutive = 0;
+        //    }
+        //}
+        //if(max_consecutive > 1) dbg_log("consecutive rows updated: " + max_consecutive + " height=" + text_mode_height + ")");
+        //if(max_consecutive === text_mode_height)
+        //{
+        //    var line_offset = 3 * text_mode_width;
+        //    for(var i = 0; i < text_mode_height; i++)
+        //    {
+        //        if(text_mode_data
+        //    }
+        //}
+
         for(var i = 0; i < text_mode_height; i++)
         {
             if(changed_rows[i])

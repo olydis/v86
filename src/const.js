@@ -41,7 +41,7 @@ var
 
 
 var LOG_LEVEL = LOG_ALL & ~LOG_PS2 & ~LOG_PIC & ~LOG_PIT & ~LOG_RTC & ~LOG_VIRTIO & ~LOG_9P &
-                          ~LOG_DISK & ~LOG_DMA & ~LOG_VGA & ~LOG_SERIAL & ~LOG_NET;
+                          ~LOG_CPU & ~LOG_DMA & ~LOG_VGA & ~LOG_SERIAL & ~LOG_NET;
 
 /** @const */
 var CPU_LOG_VERBOSE = false;
@@ -192,7 +192,7 @@ PSE_ENABLED = 128,
 
 
 /** @const */ LOOP_COUNTER = 11001,
-/** @const */ TIME_PER_FRAME = 8;
+/** @const */ TIME_PER_FRAME = 1;
 
 /** @const */
 var OP_TRANSLATION = false;
@@ -269,7 +269,7 @@ var
     SEG_PREFIX_NONE = -1,
 
     /** @const */
-    SEG_PREFIX_ZERO = 9;
+    SEG_PREFIX_ZERO = 7;
 
 
 var
@@ -339,4 +339,20 @@ var TSC_RATE = 8 * 1024;
 /** @const */ var TSR_GS = 0x5c;
 /** @const */ var TSR_LDT = 0x60;
 
+
+
+/** @const */
+var PREFIX_MASK_REP = 0b11000;
+/** @const */
+var PREFIX_REPZ = 0b01000;
+/** @const */
+var PREFIX_REPNZ = 0b10000;
+
+/** @const */
+var PREFIX_MASK_SEGMENT = 0b111;
+
+/** @const */
+var PREFIX_MASK_OPSIZE = 0b100000;
+/** @const */
+var PREFIX_MASK_ADDRSIZE = 0b1000000;
 

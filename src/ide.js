@@ -1173,7 +1173,7 @@ IDEInterface.prototype.atapi_read = function(cmd)
     else
     {
         byte_count = Math.min(byte_count, this.buffer.byteLength - start);
-        this.status = 0x50 | 0x80;
+        this.status = 0x40 | 0x80;
         this.report_read_start();
 
         this.buffer.get(start, byte_count, (data) =>

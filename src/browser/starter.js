@@ -94,6 +94,7 @@ function V86Starter(options)
     this.emulator_bus = bus[1];
     var emulator = this.v86 = new v86(this.emulator_bus);
 
+    this["bus"] = this.bus;
     this.bus.register("emulator-stopped", function()
     {
         this.cpu_is_running = false;
@@ -115,7 +116,7 @@ function V86Starter(options)
     };
 
     settings.load_devices = true;
-    settings.memory_size = options["memory_size"] || 64 * 1024 * 1024;
+    settings.memory_size = options["memory_size"] === undefined ? 64 * 1024 * 1024 : options["memory_size"];
     settings.vga_memory_size = options["vga_memory_size"] || 8 * 1024 * 1024;
     settings.boot_order = options["boot_order"] || 0x213;
     settings.fda = undefined;
@@ -672,10 +673,12 @@ V86Starter.prototype.keyboard_send_keys = function(codes)
  */
 V86Starter.prototype.keyboard_send_text = function(string)
 {
-    for(var i = 0; i < string.length; i++)
-    {
-        this.keyboard_adapter.simulate_char(string[i]);
-    }
+    setTimeout(() => {
+        for(var i = 0; i < string.length; i++)
+        {
+            this.keyboard_adapter.simulate_char(string[i]);
+        }
+    }, 0);
 };
 
 /**

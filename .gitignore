@@ -9,3 +9,5 @@ closure-compiler/
 images/
 *.bak
 *.orig
+*.pid
+*.log

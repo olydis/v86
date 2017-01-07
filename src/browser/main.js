@@ -206,7 +206,7 @@
                 id: "archlinux",
                 state: {
                     "url": HOST + "images/v86state.bin",
-                    "size": 142924774,
+                    "size": 142770440,
                 },
                 name: "Arch Linux",
                 memory_size: 128 * 1024 * 1024,
@@ -222,7 +222,7 @@
                 filesystem: {
                     "basefs": {
                         "url": HOST + "images/fs.json",
-                        "size": 7510249
+                        "size": 10232633,
                     },
                     "baseurl": HOST + "arch/",
                 },
@@ -267,7 +267,7 @@
                 id: "linux3",
                 cdrom: {
                     "url": HOST + "images/linux3.iso",
-                    "size": 10000384,
+                    "size": 8624128,
                 },
                 name: "Linux",
                 filesystem: {},
@@ -333,7 +333,7 @@
                 boot_order: 0x132,
                 state: {
                     "url": HOST + "images/windows98_state.bin",
-                    "size": 75760000,
+                    "size": 42151380,
                 },
             },
             {
@@ -341,12 +341,14 @@
                 memory_size: 64 * 1024 * 1024,
                 hda: {
                     "url": HOST + "images/W95.IMG",
+                    "size": 242049024,
                     "async": true,
                 },
                 name: "Windows 95",
                 boot_order: 0x132,
                 state: {
                     "url": HOST + "images/windows95_state.bin",
+                    "size": 42151328,
                 },
             },
             {
@@ -354,7 +356,7 @@
                 memory_size: 128 * 1024 * 1024,
                 state: {
                     "url": HOST + "images/freebsd_state.bin",
-                    "size": 142924774,
+                    "size": 142815304,
                 },
                 hda: {
                     "url": ON_LOCALHOST ? "../v86-images/os/freebsd3.img" :
@@ -365,6 +367,451 @@
                 name: "FreeBSD",
             },
         ];
+
+        DEBUG && oses.push.apply(oses, [
+            {
+                id: "archlinux2",
+                name: "Arch Linux",
+                memory_size: 128 * 1024 * 1024,
+                vga_memory_size: 8 * 1024 * 1024,
+                boot_order: 0x132,
+
+                hda: {
+                    url: "http://localhost/v86-images/arch3.img",
+                    size: 16 * 1024 * 1024 * 1024,
+                    async: true,
+                },
+
+                filesystem: {
+                    "basefs": {
+                        "url": HOST + "images/fs.json",
+                        "size": 7510249
+                    },
+                    "baseurl": HOST + "arch/",
+                },
+            },
+            {
+                id: "freebsd_boot",
+                boot_order: 0x132,
+                memory_size: 128 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/freebsd.img",
+                    "size": 17179869184,
+                    "async": true,
+                },
+                name: "FreeBSD",
+            },
+            {
+                id: "freebsd_cdrom",
+                boot_order: 0x132,
+                memory_size: 128 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/FreeBSD-11.0-RELEASE-i386-bootonly.iso",
+                    "async": true,
+                },
+                name: "FreeBSD",
+            },
+            {
+                id: "windowsme",
+                memory_size: 128 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/windows/Windows Me/windowsme.img",
+                    "async": true,
+                },
+                name: "Windows ME",
+            },
+            {
+                id: "windowsme2",
+                memory_size: 128 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/winme.img",
+                    "async": true,
+                },
+                name: "Windows ME",
+            },
+            {
+                id: "archlinux_cd",
+                name: "Arch Linux",
+                memory_size: 256 * 1024 * 1024,
+                vga_memory_size: 1 * 1024 * 1024,
+                cdrom: {
+                    //url: "/v86-images/os/archlinux-2016.07.01-dual.iso",
+                    url: "/v86-images/os/archlinux-2016.10.01-dual.iso",
+                    size: 830472192,
+                    async: true,
+                },
+            },
+            {
+                id: "archlinux_cd_state",
+                name: "Arch Linux",
+                memory_size: 256 * 1024 * 1024,
+                vga_memory_size: 8 * 1024 * 1024,
+                cdrom: {
+                    url: "/v86-images/os/archlinux-2016.10.01-dual.iso",
+                    size: 830472192,
+                    async: true,
+                },
+                state: {
+                    "url": "http://localhost/v86-images/os/state_arch.bin",
+                },
+            },
+            {
+                id: "dsl",
+                cdrom: {
+                    "url": "../v86-images/os/dsl-4.11.rc2.iso",
+            //        "url": "https://dl.dropboxusercontent.com/u/61029208/dsl-4.11.rc2.iso",
+                    "async": true,
+                },
+                name: "Damn Small Linux",
+            },
+            {
+                id: "tinycore",
+                cdrom: {
+                    "url": "../v86-images/os/TinyCore-current.iso",
+                    "async": true,
+                },
+                name: "Tinycore",
+            },
+            {
+                id: "9pboot",
+                cdrom: {
+                    "url": "images/9pboot.iso",
+                    "async": false,
+                },
+                name: "9p Linux image",
+                filesystem: {
+                    "basefs": {
+                        "url": "http://localhost/v86-images/fs.json",
+                        "size": 7510249,
+                    },
+                    "baseurl": "http://localhost/v86-images/arch/",
+                },
+            },
+            {
+                id: "windows95_boot",
+                memory_size: 64 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/W95.IMG",
+                    "async": true,
+                },
+                name: "Windows 95",
+                boot_order: 0x132,
+            },
+            {
+                id: "windows98_boot",
+                memory_size: 64 * 1024 * 1024,
+                hda: {
+                    "url": "images/windows98.img",
+                    //"url": "http://joey/v86/images/windows98.img",
+                    "async": true,
+                    "size": 300 * 1024 * 1024,
+                },
+                //cdrom: {
+                //    "url": "../v86-images/os/windows98.img",
+                //    "async": false,
+                //},
+                name: "Windows 98",
+                boot_order: 0x132,
+            },
+            {
+                id: "windows31",
+                memory_size: 64 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/windows31.img",
+                    "async": true,
+                },
+                name: "Windows 3.1",
+            },
+            {
+                id: "windows30",
+                memory_size: 64 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/Win30.iso",
+                    "async": true,
+                },
+                name: "Windows 3.0",
+            },
+            {
+                id: "windows30_quick",
+                memory_size: 64 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/Win30.iso",
+                    "async": true,
+                },
+                name: "Windows 3.0",
+                state: {
+                    "url": "http://localhost/v86-images/state-windows30.bin",
+                },
+            },
+            {
+                id: "windowsxp",
+                memory_size: 128 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/windows/xp.img",
+                    "async": true,
+                },
+                name: "Windows XP",
+            },
+            {
+                id: "windows2000",
+                memory_size: 128 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/windows/windows_2000_server/win2000.img",
+                    "async": true,
+                },
+                name: "Windows 2000",
+            },
+            {
+                id: "windows7",
+                memory_size: 512 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/windows7.img",
+                    "async": true,
+                },
+                name: "Windows 7",
+            },
+            {
+                id: "fdgame",
+                memory_size: 64 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/fdgame135_HD.iso",
+                    "async": true,
+                },
+                name: "FreeDOS games",
+            },
+            {
+                id: "reactos_hd",
+                memory_size: 256 * 1024 * 1024,
+                hda: {
+                    //"url": "../v86-images/os/reactos-latest.img",
+                    //"url": "../v86-images/os/ReactOS.img",
+                    "url": "../v86-images/os/react-0.4.2-installed.img",
+                    "async": true,
+                },
+                //state: {
+                //    "url": "../v86-images/os/reactos-state.bin",
+                //},
+                name: "React OS",
+            },
+            {
+                id: "reactos2",
+                memory_size: 256 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/reactos-livecd-66712-dbg.iso",
+                    "async": true,
+                },
+                name: "React OS",
+            },
+            {
+                id: "reactos3",
+                memory_size: 256 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/livecd-72079-dbg.iso",
+                    "async": true,
+                    "size": 202352640,
+                },
+                name: "React OS",
+            },
+            {
+                id: "reactos3_state",
+                memory_size: 256 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/livecd-72079-dbg.iso",
+                    "async": true,
+                },
+                state: {
+                    "url": "../v86-images/os/reactos-state3.bin",
+                },
+                name: "React OS",
+            },
+            {
+                id: "reactos",
+                memory_size: 256 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/reactos-livecd-compiled.iso",
+                    "async": true,
+                },
+                name: "React OS",
+            },
+            {
+                id: "reactos_installation",
+                memory_size: 256 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/ReactOS-0.4.2.iso",
+                    "async": true,
+                },
+                name: "React OS",
+            },
+            {
+                id: "reactos_uniata_debug",
+                memory_size: 256 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/livecd-r73357-Uniata-debug.iso",
+                    "async": true,
+                },
+                name: "React OS",
+            },
+            {
+                id: "reactos_scsi_debug",
+                memory_size: 256 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/livecd-73358-atapi-cdfs-scsiport-debug.iso",
+                    "async": true,
+                },
+                name: "React OS",
+            },
+            {
+                id: "winnt",
+                memory_size: 128 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/nt.img",
+                    "async": true,
+                },
+                name: "Windows NT",
+            },
+            {
+                id: "windowsme",
+                memory_size: 128 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/windows/Windows Me/windowsme.img",
+                    "async": true,
+                },
+                name: "Windows ME",
+            },
+            {
+                id: "windowsme2",
+                memory_size: 128 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/winme.img",
+                    "async": true,
+                },
+                name: "Windows ME",
+            },
+            {
+                id: "openbsd_hd",
+                memory_size: 64 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/openbsd.img",
+                    "async": true,
+                    "size": 8589934592,
+                },
+                name: "OpenBSD",
+            },
+            {
+                id: "netbsd",
+                memory_size: 64 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/netbsd-boot.iso",
+                    "size": 6731776,
+                    "async": true,
+                },
+                name: "NetBSD",
+            },
+            {
+                id: "haiku",
+                memory_size: 256 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/haiku-nightly-anyboot.image",
+                    "async": true,
+                },
+                name: "Haiku",
+            },
+            {
+                id: "haiku_cdrom",
+                memory_size: 128 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/haiku.iso",
+                    "size": 615106560,
+                    "async": true,
+                },
+                name: "Haiku",
+            },
+            {
+                id: "android",
+                memory_size: 128 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/android-x86-1.6-r2.iso",
+                    "size": 54661120,
+                    "async": true,
+                },
+                name: "Android",
+            },
+            {
+                id: "ubuntu5",
+                memory_size: 128 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/ubuntu-5.10-live-i386.iso",
+                    "size": 657975296,
+                    "async": true,
+                },
+                name: "Ubuntu 5.10",
+            },
+            {
+                id: "nodeos",
+                memory_size: 128 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/nodeos/rootfs.iso",
+                    "async": true,
+                },
+                hda: {
+                    "url": "../v86-images/os/nodeos/usersfs.img",
+                    "async": true,
+                },
+                name: "NodeOS",
+            },
+            {
+                id: "qbasic",
+                memory_size: 128 * 1024 * 1024,
+                fda: {
+                    "url": "../v86-images/os/qbasic.img",
+                    "async": true,
+                },
+                name: "FreeDOS + qbasic",
+            },
+            {
+                id: "os2_3",
+                memory_size: 128 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/os2/3/disk.img",
+                    "async": true,
+                },
+                name: "OS/2 3",
+            },
+            {
+                id: "os2_4",
+                memory_size: 128 * 1024 * 1024,
+                hda: {
+                    "url": "../v86-images/os/os2_4.img",
+                    "async": true,
+                },
+                boot_order: 0x132,
+                name: "OS/2 4",
+            },
+            {
+                id: "helenos",
+                memory_size: 128 * 1024 * 1024,
+                cdrom: {
+                    "url": "../v86-images/os/HelenOS-0.5.0-ia32.iso",
+                    "async": false,
+                },
+                name: "HelenOS",
+            },
+            {
+                id: "noboot",
+                memory_size: 64 * 1024 * 1024,
+                name: "No bootable device",
+            },
+            {
+                id: "404",
+                memory_size: 64 * 1024 * 1024,
+                name: "No bootable device",
+                cdrom: {
+                    "url": "<NULL>",
+                    "size": 657975296,
+                    "async": false,
+                },
+            },
+        ]);
 
         var query_args = get_query_arguments();
         var profile = query_args["profile"];

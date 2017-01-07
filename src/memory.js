@@ -10,7 +10,54 @@ var A20_MASK32 = ~(1 << 20 - 2);
 /** @const */
 var USE_A20 = false;
 
-// called by all memory reads and writes
+CPU.prototype.check_write_page = function(page)
+{
+    if(!CACHED_MODE) return;
+    if(this.mem_page_infos[page])
+    {
+        //dbg_log("Cleared due to write, size=" + this.instruction_cache_size + " page=" + h(page));
+        this.mem_page_infos[page] = 0;
+        this.clear_instruction_cache();
+        CACHED_STATS && stats.clears_write++;
+    }
+};
+
+CPU.prototype.check_write2 = function(addr, size)
+{
+    if(!CACHED_MODE) return;
+    var page = addr >>> 12;
+    var page2 = addr + size >>> 12;
+    this.check_write_page(page);
+    if(page !== page2)
+    {
+        this.check_write_page(page2);
+    }
+};
+
+CPU.prototype.check_write_range = function(addr, size)
+{
+    if(!CACHED_MODE) return;
+    var do_clear = false;
+
+    // XXX: Too many iterations?
+    for(var i = addr >> 12; i <= (addr + size >> 12); i++)
+    {
+        if(this.mem_page_infos[i])
+        {
+            //dbg_log("Cleared due to write, size=" + this.instruction_cache_size + " page=" + h(i));
+            do_clear = true;
+            this.mem_page_infos[i] = 0;
+        }
+    }
+
+    if(do_clear)
+    {
+        this.clear_instruction_cache();
+        CACHED_STATS && stats.clears_write++;
+    }
+};
+
+// called by all memory writes
 CPU.prototype.debug_write = function(addr, size, value)
 {
     if(!DEBUG)
@@ -21,6 +68,13 @@ CPU.prototype.debug_write = function(addr, size, value)
     dbg_assert(typeof value === "number" && !isNaN(value));
     dbg_assert(value >= -0x80000000 && addr < 0x80000000);
 
+    //if((addr >>> 0) >= 0xDBCF60 && (addr >>> 0) < 0xDBCF90)
+    //{
+    //    dbg_log("write " + h(value >>> 0, 8) + " to " + h(addr >>> 0, 8) + " at " + h(this.instruction_pointer >>> 0));
+    //    dbg_trace();
+    //}
+
+    //dbg_log("Write " + size + " bytes to " + h(addr >>> 0, 8));
     this.debug_read(addr, size, true);
 }
 
@@ -59,6 +113,7 @@ CPU.prototype.mmap_read16 = function(addr)
 CPU.prototype.mmap_write16 = function(addr, value)
 {
     var fn = this.memory_map_write8[addr >>> MMAP_BLOCK_BITS];
+    //console.log("write16");
 
     fn(addr, value & 0xFF);
     fn(addr + 1 | 0, value >> 8 & 0xFF);
@@ -74,13 +129,14 @@ CPU.prototype.mmap_read32 = function(addr)
 CPU.prototype.mmap_write32 = function(addr, value)
 {
     var aligned_addr = addr >>> MMAP_BLOCK_BITS;
+    //console.log("write32");
 
     this.memory_map_write32[aligned_addr](addr, value);
 }
 
 CPU.prototype.in_mapped_range = function(addr)
 {
-    return addr < 0 || addr >= 0xA0000 && addr < 0xC0000 || addr >= this.memory_size;
+    return (addr | 0) >= 0xA0000 && (addr | 0) < 0xC0000 || (addr >>> 0) >= (this.memory_size >>> 0);
 };
 
 /**
@@ -185,9 +241,8 @@ CPU.prototype.write8 = function(addr, value)
     this.debug_write(addr, 1, value);
     if(USE_A20 && !this.a20_enabled) addr &= A20_MASK;
 
-    var page = addr >>> MMAP_BLOCK_BITS;
-
-    //if(OP_TRANSLATION) this.mem_page_infos[page] |= MEM_PAGE_WRITTEN;
+    this.check_write_page(addr >>> 12);
+    //this.mem_page_infos[addr >>> MMAP_BLOCK_BITS] |= MEM_PAGE_WRITTEN;
 
     if(this.in_mapped_range(addr))
     {
@@ -206,15 +261,11 @@ CPU.prototype.write8 = function(addr, value)
 CPU.prototype.write16 = function(addr, value)
 {
     this.debug_write(addr, 2, value);
+    this.check_write2(addr, 2);
     if(USE_A20 && !this.a20_enabled) addr &= A20_MASK;
 
-    var page = addr >>> MMAP_BLOCK_BITS;
-
-    //if(OP_TRANSLATION)
-    //{
-    //    this.mem_page_infos[page] |= MEM_PAGE_WRITTEN;
-    //    this.mem_page_infos[addr + 1 >>> MMAP_BLOCK_BITS] |= MEM_PAGE_WRITTEN;
-    //}
+    //this.mem_page_infos[addr >>> MMAP_BLOCK_BITS] |= MEM_PAGE_WRITTEN;
+    //this.mem_page_infos[addr + 1 >>> MMAP_BLOCK_BITS] |= MEM_PAGE_WRITTEN;
 
     if(this.in_mapped_range(addr))
     {
@@ -235,11 +286,10 @@ CPU.prototype.write_aligned16 = function(addr, value)
 {
     dbg_assert(addr >= 0 && addr < 0x80000000);
     this.debug_write(addr << 1, 2, value);
+    this.check_write_page(addr >> 12 - 1);
     if(USE_A20 && !this.a20_enabled) addr &= A20_MASK16;
 
-    var page = addr >>> MMAP_BLOCK_BITS - 1;
-
-    //if(OP_TRANSLATION) this.mem_page_infos[page] |= MEM_PAGE_WRITTEN;
+    //this.mem_page_infos[addr >>> MMAP_BLOCK_BITS - 1] |= MEM_PAGE_WRITTEN;
 
     if(this.in_mapped_range(addr << 1))
     {
@@ -258,15 +308,11 @@ CPU.prototype.write_aligned16 = function(addr, value)
 CPU.prototype.write32 = function(addr, value)
 {
     this.debug_write(addr, 4, value);
+    this.check_write2(addr, 4);
     if(USE_A20 && !this.a20_enabled) addr &= A20_MASK;
 
-    var page = addr >>> MMAP_BLOCK_BITS;
-
-    //if(OP_TRANSLATION)
-    //{
-    //    this.mem_page_infos[page] |= MEM_PAGE_WRITTEN;
-    //    this.mem_page_infos[addr + 3 >>> MMAP_BLOCK_BITS] |= MEM_PAGE_WRITTEN;
-    //}
+    //this.mem_page_infos[addr >>> MMAP_BLOCK_BITS] |= MEM_PAGE_WRITTEN;
+    //this.mem_page_infos[addr + 3 >>> MMAP_BLOCK_BITS] |= MEM_PAGE_WRITTEN;
 
     if(this.in_mapped_range(addr))
     {
@@ -285,11 +331,10 @@ CPU.prototype.write_aligned32 = function(addr, value)
 {
     dbg_assert(addr >= 0 && addr < 0x40000000);
     this.debug_write(addr << 2, 4, value);
+    this.check_write_page(addr >> 12 - 2);
     if(USE_A20 && !this.a20_enabled) addr &= A20_MASK32;
 
-    var page = addr >>> MMAP_BLOCK_BITS - 2;
-
-    //if(OP_TRANSLATION) this.mem_page_infos[page] |= MEM_PAGE_WRITTEN;
+    //this.mem_page_infos[addr >>> MMAP_BLOCK_BITS - 2] |= MEM_PAGE_WRITTEN;
 
     if(this.in_mapped_range(addr << 2))
     {
@@ -307,20 +352,11 @@ CPU.prototype.write_aligned32 = function(addr, value)
  */
 CPU.prototype.write_blob = function(blob, offset)
 {
-    dbg_assert(blob && blob.length);
+    this.debug_write(offset, blob.length, 0)
+    this.check_write_range(offset, blob.length);
+    dbg_assert(blob && blob.length >= 0);
 
     this.mem8.set(blob, offset);
-
-    //var page = offset >>> 12;
-    //var end = (offset + blob) >>> 12;
-
-    //if(OP_TRANSLATION)
-    //{
-    //    for(; page <= end; page++)
-    //    {
-    //        this.mem_page_infos[page] |= MEM_PAGE_WRITTEN;
-    //    }
-    //}
 };
 
 /**
@@ -330,5 +366,7 @@ CPU.prototype.write_blob = function(blob, offset)
 CPU.prototype.write_blob32 = function(blob, offset)
 {
     dbg_assert(blob && blob.length);
+    this.debug_write(offset, blob.length << 2, 0);
+    this.check_write_range(offset, blob.length << 2);
     this.mem32s.set(blob, offset);
 };

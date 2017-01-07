@@ -45,6 +45,7 @@ v86.prototype.do_tick = function()
 
     this.running = true;
     var dt = this.cpu.main_run();
+    dbg_assert(typeof dt === "number" && isFinite(dt));
 
     if(dt <= 0)
     {
@@ -94,6 +95,63 @@ v86.prototype.lazy_init = function()
             setImmediate(function() { emulator.do_tick(); });
         };
     }
+    //else if(typeof Promise !== "undefined")
+    //{
+    //    var promise = Promise.resolve();
+    //    this.fast_next_tick = function()
+    //    {
+    //        promise.then(function() { emulator.do_tick(); });
+    //    };
+    //}
+    //else if((typeof MutationObserver !== "undefined") &&
+    //        !(typeof window !== "undefined" &&
+    //            window.navigator &&
+    //            window.navigator.standalone))
+    //{
+    //    this.fast_next_tick = (function() {
+    //        // Using 2 mutation observers to batch multiple updates into one.
+    //        var div = document.createElement("div");
+    //        var opts = {attributes: true};
+    //        var toggleScheduled = false;
+    //        var div2 = document.createElement("div");
+    //        var o2 = new MutationObserver(function() {
+    //            div.classList.toggle("foo");
+    //            toggleScheduled = false;
+    //        });
+    //        o2.observe(div2, opts);
+    //        var scheduleToggle = function() {
+    //            if (toggleScheduled) return;
+    //            toggleScheduled = true;
+    //            div2.classList.toggle("foo");
+    //        };
+    //        return function schedule() {
+    //            var o = new MutationObserver(function() {
+    //                o.disconnect();
+    //                emulator.do_tick();
+    //            });
+    //            o.observe(div, opts);
+    //            scheduleToggle();
+    //        };
+    //    })();
+    //}
+    //else if(typeof MessageChannel === "function") // works well but not in safari
+    //{
+    //    // setImmediate shim for the browser.
+    //    var channel = new MessageChannel();
+    //    var port = channel.port2;
+    //    //channel.port1.emulator = this;
+    //    //console.log(this.port, channel);
+    //    channel.port1.onmessage = function()
+    //    {
+    //        //debugger;
+    //        //console.log(this);
+    //        emulator.do_tick();
+    //    };
+    //    this.fast_next_tick = function()
+    //    {
+    //        port.postMessage(undefined);
+    //    };
+    //}
     else if(typeof window !== "undefined" && typeof postMessage !== "undefined")
     {
         // setImmediate shim for the browser.
@@ -107,15 +165,23 @@ v86.prototype.lazy_init = function()
         {
             if(e.source === window && e.data === MAGIC_POST_MESSAGE)
             {
+                e.stopPropagation();
                 emulator.do_tick();
             }
-        }, false);
+        }, true);
 
         this.fast_next_tick = function()
         {
             window.postMessage(MAGIC_POST_MESSAGE, "*");
         };
     }
+    //else if(typeof requestAnimationFrame !== "undefined")
+    //{
+    //    this.fast_next_tick = function()
+    //    {
+    //        requestAnimationFrame(function() { emulator.do_tick(); });
+    //    };
+    //}
     else
     {
         this.fast_next_tick = function()
