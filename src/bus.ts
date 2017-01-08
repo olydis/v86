@@ -75,7 +75,7 @@ export class BusConnector
     {
         dbg_assert(arguments.length === 1 || arguments.length === 2);
 
-        setTimeout(this.send.bind(this, name, value), 0);
+        setTimeout(() => this.send(name, value), 0);
     }
 }
 

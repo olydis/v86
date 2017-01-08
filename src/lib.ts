@@ -451,7 +451,7 @@ export class AsyncXHRBuffer
         {
             if(ASYNC_SAFE)
             {
-                setTimeout(fn.bind(this, block), 0);
+                setTimeout(() => fn(block), 0);
             }
             else
             {

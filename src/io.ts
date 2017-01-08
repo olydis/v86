@@ -100,9 +100,9 @@ export class IO
                 dbg_assert(false, "Overlapped read" + n + " " + h(port_addr, 4) + " (" + device.name + ")");
                 return -1 >>> (32 - n) | 0;
             };
-            if(!r8) r8 = fail.bind(this, 8);
-            if(!r16) r16 = fail.bind(this, 16);
-            if(!r32) r32 = fail.bind(this, 32);
+            if(!r8) r8 = () => fail(8);
+            if(!r16) r16 = () => fail(16);
+            if(!r32) r32 = () => fail(32);
         }
 
         if(r8) this.ports[port_addr].read8 = r8;
@@ -132,9 +132,9 @@ export class IO
             var fail = (n) => {
                 dbg_assert(false, "Overlapped write" + n + " " + h(port_addr) + " (" + device.name + ")");
             };
-            if(!w8) w8 = fail.bind(this, 8);
-            if(!w16) w16 = fail.bind(this, 16);
-            if(!w32) w32 = fail.bind(this, 32);
+            if(!w8) w8 = () => fail(8);
+            if(!w16) w16 = () => fail(16);
+            if(!w32) w32 = () => fail(32);
         }
 
         if(w8) this.ports[port_addr].write8 = w8;
@@ -152,34 +152,33 @@ export class IO
      *
      * Register the write of 2 or 4 consecutive 8-bit ports, 1 or 2 16-bit
      * ports and 0 or 1 32-bit ports
-     *
-     * @param {number} port_addr
-     * @param {!Object} device
-     * @param {() =>:number} r8_1
-     * @param {() =>:number} r8_2
-     * @param {() =>:number=} r8_3
-     * @param {() =>:number=} r8_4
      */
-    public register_read_consecutive(port_addr, device, r8_1, r8_2, r8_3, r8_4): void
+    public register_read_consecutive(
+        port_addr: number,
+        device: any,
+        r8_1: () => number,
+        r8_2: () => number,
+        r8_3: () => number,
+        r8_4: () => number): void
     {
         dbg_assert(arguments.length === 4 || arguments.length === 6);
 
         var r16_1 = () =>
         {
-            return r8_1.call(this) |
-                    r8_2.call(this) << 8;
+            return r8_1() |
+                    r8_2() << 8;
         };
         var r16_2 = () =>
         {
-            return r8_3.call(this) |
-                    r8_4.call(this) << 8;
+            return r8_3() |
+                    r8_4() << 8;
         }
         var r32 = () =>
         {
-            return r8_1.call(this) |
-                    r8_2.call(this) << 8 |
-                    r8_3.call(this) << 16 |
-                    r8_4.call(this) << 24;
+            return r8_1() |
+                    r8_2() << 8 |
+                    r8_3() << 16 |
+                    r8_4() << 24;
         }
 
         if(r8_3 && r8_4)
@@ -204,26 +203,26 @@ export class IO
      * @param {(number) =>=} w8_3
      * @param {(number) =>=} w8_4
      */
-    public register_write_consecutive(port_addr, device, w8_1, w8_2, w8_3, w8_4): void
+    public register_write_consecutive(port_addr, device, w8_1, w8_2, w8_3?, w8_4?): void
     {
         dbg_assert(arguments.length === 4 || arguments.length === 6);
 
         var w16_1 = (data) =>
         {
-            w8_1.call(this, data & 0xFF);
-            w8_2.call(this, data >> 8 & 0xFF);
+            w8_1(data & 0xFF);
+            w8_2(data >> 8 & 0xFF);
         }
         var w16_2 = (data) =>
         {
-            w8_3.call(this, data & 0xFF);
-            w8_4.call(this, data >> 8 & 0xFF);
+            w8_3(data & 0xFF);
+            w8_4(data >> 8 & 0xFF);
         }
         var w32 = (data) =>
         {
-            w8_1.call(this, data & 0xFF);
-            w8_2.call(this, data >> 8 & 0xFF);
-            w8_3.call(this, data >> 16 & 0xFF);
-            w8_4.call(this, data >>> 24);
+            w8_1(data & 0xFF);
+            w8_2(data >> 8 & 0xFF);
+            w8_3(data >> 16 & 0xFF);
+            w8_4(data >>> 24);
         }
 
         if(w8_3 && w8_4)
@@ -296,7 +295,7 @@ export class IO
      * @param {*=} read_func32
      * @param {*=} write_func32
      */
-    public mmap_register(addr, size, read_func8, write_func8, read_func32, write_func32): void
+    public mmap_register(addr, size, read_func8, write_func8, read_func32?, write_func32?): void
     {
         dbg_log("mmap_register addr=" + h(addr >>> 0, 8) + " size=" + h(size, 8), LOG_IO);
 
@@ -304,10 +303,10 @@ export class IO
         dbg_assert(size && (size & MMAP_BLOCK_SIZE - 1) === 0);
 
         if(!read_func32)
-            read_func32 = this.mmap_read32_shim.bind(this);
+            read_func32 = (addr) => this.mmap_read32_shim(addr);
 
         if(!write_func32)
-            write_func32 = this.mmap_write32_shim.bind(this);
+            write_func32 = (addr, value) => this.mmap_write32_shim(addr, value);
 
         var aligned_addr = addr >>> MMAP_BLOCK_BITS;
 
@@ -334,7 +333,7 @@ export class IO
                 LOG_IO
             );
         }
-        return entry.write8.call(entry.device, data);
+        return entry.write8(data);
     }
 
     public port_write16(port_addr, data)
@@ -348,7 +347,7 @@ export class IO
                 LOG_IO
             );
         }
-        return entry.write16.call(entry.device, data);
+        return entry.write16(data);
     };
 
     public port_write32(port_addr, data)
@@ -362,7 +361,7 @@ export class IO
                 LOG_IO
             );
         }
-        return entry.write32.call(entry.device, data);
+        return entry.write32(data);
     };
 
     public port_read8(port_addr)
@@ -376,7 +375,7 @@ export class IO
                 LOG_IO
             );
         }
-        var value = entry.read8.call(entry.device);
+        var value = entry.read8();
         dbg_assert(value < 0x100, "8 bit port returned large value: " + h(port_addr));
         return value;
     };
@@ -392,7 +391,7 @@ export class IO
                 LOG_IO
             );
         }
-        var value = entry.read16.call(entry.device);
+        var value = entry.read16();
         dbg_assert(value < 0x10000, "16 bit port returned large value: " + h(port_addr));
         return value;
     };
@@ -408,7 +407,7 @@ export class IO
                 LOG_IO
             );
         }
-        return entry.read32.call(entry.device);
+        return entry.read32();
     };
 
     // via seabios ioport.h

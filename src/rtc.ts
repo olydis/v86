@@ -36,8 +36,8 @@ export class RTC
             this.nmi_disabled = out_byte >> 7;
         });
 
-        cpu.io.register_write(0x71, this, this.cmos_port_write);
-        cpu.io.register_read(0x71, this, this.cmos_port_read);
+        cpu.io.register_write(0x71, this, (data_byte) => this.cmos_port_write(data_byte));
+        cpu.io.register_read(0x71, this, () => this.cmos_port_read());
     }
 
     public get_state()

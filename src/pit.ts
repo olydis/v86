@@ -53,7 +53,7 @@ export class PIT
         cpu.io.register_write(0x41, this, (data) => this.counter_write(1, data));
         cpu.io.register_write(0x42, this, (data) => this.counter_write(2, data));
 
-        cpu.io.register_write(0x43, this, this.port43_write);
+        cpu.io.register_write(0x43, this, (data) => this.port43_write(data));
     }
 
     public get_state()

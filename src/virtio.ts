@@ -205,7 +205,7 @@ export class VirtIO
 
         // should be generalized to support more devices than just the filesystem
         this.device = new Virtio9p(filesystem, bus);
-        this.device.SendReply = this.device_reply.bind(this);
+        this.device.SendReply = (queueidx, infos) => this.device_reply(queueidx, infos);
     }
 
     public get_state(): any
@@ -235,7 +235,7 @@ export class VirtIO
         this.queue_address = state[6];
 
         this.device = state[7];
-        this.device.SendReply = this.device_reply.bind(this);
+        this.device.SendReply = (queueidx, infos) => this.device_reply(queueidx, infos);
     }
 
     public reset(): void

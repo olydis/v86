@@ -4,6 +4,9 @@
         "alwaysStrict": true,
         "noImplicitReturns": true,
         "noImplicitThis": true,
+        "allowUnreachableCode": true,
+        //"noUnusedLocals": true,
+        //"noUnusedParameters": true,
         "outDir": "build"
     },
     "exclude": [

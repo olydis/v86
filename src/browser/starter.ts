@@ -348,7 +348,7 @@ export class V86Starter
     {
         if(index === this.total)
         {
-            setTimeout(this.done.bind(this), 0);
+            setTimeout(() => this.done(), 0);
             return;
         }
 
@@ -358,7 +358,7 @@ export class V86Starter
         {
             f.loadable.onload = (e) =>
             {
-                this.put_on_settings.call(this, f.name, f.loadable);
+                this.put_on_settings(f.name, f.loadable);
                 this.cont(index + 1);
             };
             f.loadable.load();
@@ -368,7 +368,7 @@ export class V86Starter
             load_file(f.url, {
                 done: (result) =>
                 {
-                    this.put_on_settings.call(this, f.name, new SyncBuffer(result));
+                    this.put_on_settings(f.name, new SyncBuffer(result));
                     this.cont(index + 1);
                 },
                 progress: (e) =>

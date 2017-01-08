@@ -170,9 +170,9 @@ export class IDEDevice
             this.cpu.device_lower_irq(this.irq);
             return this.read_status();
         });
-        cpu.io.register_read(this.ata_port_high | 2, this, this.read_status);
+        cpu.io.register_read(this.ata_port_high | 2, this, () => this.read_status());
 
-        cpu.io.register_write(this.ata_port_high | 2, this, this.write_control);
+        cpu.io.register_write(this.ata_port_high | 2, this, (data_byte) => this.write_control(data_byte));
         cpu.io.register_read(this.ata_port | 0, this, 
             () => this.current_interface.read_data(1),
             () => this.current_interface.read_data(2),
@@ -277,16 +277,16 @@ export class IDEDevice
             this.current_interface.ata_command(data);
         });
 
-        cpu.io.register_read(this.master_port | 4, this, undefined, undefined, this.dma_read_addr);
-        cpu.io.register_write(this.master_port | 4, this, undefined, undefined, this.dma_set_addr);
+        cpu.io.register_read(this.master_port | 4, this, undefined, undefined, () => this.dma_read_addr());
+        cpu.io.register_write(this.master_port | 4, this, undefined, undefined, (data_byte) => this.dma_set_addr(data_byte));
 
         cpu.io.register_read(this.master_port, this,
-                            this.dma_read_command8, undefined, this.dma_read_command);
+                            () => this.dma_read_command8(), undefined, () => this.dma_read_command());
         cpu.io.register_write(this.master_port, this,
-                            this.dma_write_command8, undefined, this.dma_write_command);
+                            (data_byte) => this.dma_write_command8(data_byte), undefined, (data_byte) => this.dma_write_command(data_byte));
 
-        cpu.io.register_read(this.master_port | 2, this, this.dma_read_status);
-        cpu.io.register_write(this.master_port | 2, this, this.dma_write_status);
+        cpu.io.register_read(this.master_port | 2, this, () => this.dma_read_status());
+        cpu.io.register_write(this.master_port | 2, this, (data_byte) => this.dma_write_status(data_byte));
 
         cpu.io.register_read(this.master_port | 0x8, this, () => {
             dbg_log("DMA read 0x8", LOG_DISK); return 0;
@@ -1124,7 +1124,7 @@ export class IDEInterface
             this.buffer.get(start, byte_count, (data) =>
             {
                 //setTimeout(() => {
-                dbg_log("cd read: data arrived", LOG_DISK)
+                dbg_log("cd read: data arrived", LOG_DISK);
                 this.data_set(data);
                 this.status = 0x58;
                 this.bytecount = this.bytecount & ~7 | 2;
@@ -1449,7 +1449,7 @@ export class IDEInterface
     {
         if(this.current_command === 0xA0)
         {
-            this.atapi_handle()
+            this.atapi_handle();
         }
         else
         {
@@ -1458,7 +1458,7 @@ export class IDEInterface
 
             if(this.data_pointer >= this.data_length)
             {
-                this.do_write()
+                this.do_write();
             }
             else
             {
@@ -1467,7 +1467,7 @@ export class IDEInterface
                 //this.ata_advance(this.current_command, 1);
                 this.status = 0x58;
                 this.data_end += 512;
-                this.push_irq()
+                this.push_irq();
             }
         }
     };

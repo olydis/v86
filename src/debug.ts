@@ -50,8 +50,8 @@ export class Debug
             // write seabios debug output to console
             var seabios_debug = "";
 
-            this.cpu.io.register_write(0x402, this, handle); // seabios
-            this.cpu.io.register_write(0x500, this, handle); // vgabios
+            this.cpu.io.register_write(0x402, this, (data_byte) => handle(data_byte)); // seabios
+            this.cpu.io.register_write(0x500, this, (data_byte) => handle(data_byte)); // vgabios
         }
 
         function handle(out_byte)
@@ -267,7 +267,7 @@ export class Debug
             out;
 
 
-        dbg_log("----- DUMP (ip = " + h(this.cpu.instruction_pointer >>> 0) + ") ----------")
+        dbg_log("----- DUMP (ip = " + h(this.cpu.instruction_pointer >>> 0) + ") ----------");
         dbg_log("protected mode: " + this.cpu.protected_mode);
 
         for(var i in r32)

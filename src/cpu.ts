@@ -198,8 +198,8 @@ export class CPU
     // dynamic instruction translator
     private translator = undefined;
 
-    public io = undefined;
-    public fpu = undefined;
+    public io: IO = undefined;
+    public fpu: FPU = undefined;
 
     public debug: Debug;
 
@@ -807,6 +807,7 @@ export class CPU
         }
         catch(e)
         {
+            console.warn([this.timestamp_counter, this.previous_ip]);
             this.exception_cleanup(e);
         }
     }
@@ -831,6 +832,7 @@ export class CPU
     }
 
     //var __counts = {};
+    public breakpoints: {[ip: number]: boolean} = {};
 
     /**
      * execute a single instruction cycle on the cpu
@@ -839,6 +841,8 @@ export class CPU
     public cycle_internal(): void
     {
         this.previous_ip = this.instruction_pointer;
+        if (this.breakpoints[this.instruction_pointer])
+            debugger;
         //console.log(h(this.previous_ip >>> 0));
         //console.assert(this.table === (this.is_32 ? this.table32 : this.table16));
         //console.assert(this.prefixes === 0);
@@ -854,7 +858,7 @@ export class CPU
         //__counts[addr] = __counts[addr] + 1 | 0;
         //this.translate_address_read(this.instruction_pointer + 15|0)
         var opcode = this.read_imm8();
-        console.warn([this.timestamp_counter, this.instruction_pointer, opcode]);
+        //console.warn([this.timestamp_counter, this.instruction_pointer, opcode]);
 
         // if(DEBUG)
         // {
@@ -4463,7 +4467,7 @@ export class CPU
 
     public setcc(condition: boolean): void
     {
-        this.set_e8(condition ? 1 : 0)
+        this.set_e8(condition ? 1 : 0);
     }
 
     public loopne(imm8s: number): void
@@ -4665,7 +4669,7 @@ export class CPU
         // make sure we don't get a pagefault after having
         // pushed several registers already
         //this.translate_address_write(this.get_stack_pointer(-15));
-        this.writable_or_pagefault(this.get_stack_pointer(-16), 16)
+        this.writable_or_pagefault(this.get_stack_pointer(-16), 16);
 
         this.push16(this.reg16[reg_ax]);
         this.push16(this.reg16[reg_cx]);
@@ -4682,7 +4686,7 @@ export class CPU
         var temp = this.reg32s[reg_esp];
 
         //this.translate_address_write(this.get_stack_pointer(-31));
-        this.writable_or_pagefault(this.get_stack_pointer(-32), 32)
+        this.writable_or_pagefault(this.get_stack_pointer(-32), 32);
 
         this.push32(this.reg32s[reg_eax]);
         this.push32(this.reg32s[reg_ecx]);

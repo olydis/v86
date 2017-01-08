@@ -16,12 +16,12 @@ export class DMA
         this.cpu = cpu;
 
         var io = cpu.io;
-        io.register_write(0x04, this, this.port_write.bind(this, 0x04));
-        io.register_write(0x05, this, this.port_write.bind(this, 0x05));
-        io.register_write(0x0A, this, this.portA_write);
-        io.register_write(0x0B, this, this.portB_write);
-        io.register_write(0x0C, this, this.portC_write);
-        io.register_write(0x81, this, this.port81_write);
+        io.register_write(0x04, this, (data_byte) => this.port_write(0x04, data_byte));
+        io.register_write(0x05, this, (data_byte) => this.port_write(0x05, data_byte));
+        io.register_write(0x0A, this, (data_byte) => this.portA_write(data_byte));
+        io.register_write(0x0B, this, (data_byte) => this.portB_write(data_byte));
+        io.register_write(0x0C, this, (data_byte) => this.portC_write(data_byte));
+        io.register_write(0x81, this, (data_byte) => this.port81_write(data_byte));
     }
 
     public get_state(): any[]

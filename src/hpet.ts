@@ -16,11 +16,22 @@ var HPET_ADDR = 0xFED00000,
  * http://wiki.osdev.org/HPET
  */
 
+// function ticks(): number
+// {
+//     return Date.now();
+// }
+var pseudo_time: number = 1483911185593;
+export function ticks(): number
+{
+    pseudo_time += 1;
+    return pseudo_time;
+}
+
 export class HPET
 {
     public legacy_mode = false;
     private hpet_enabled = false;
-    private hpet_start = Date.now();
+    private hpet_start = ticks();
 
     private hpet_offset_low = 0;
     private hpet_offset_high = 0;
@@ -112,7 +123,7 @@ export class HPET
     {
         if(this.hpet_enabled)
         {
-            return (Date.now() - this.hpet_start) * HPET_FREQ_MS + this.hpet_offset_low | 0;
+            return (ticks() - this.hpet_start) * HPET_FREQ_MS + this.hpet_offset_low | 0;
         }
         else
         {
@@ -126,7 +137,7 @@ export class HPET
         {
             if(this.hpet_enabled)
             {
-                return (Date.now() - this.hpet_start) * (HPET_FREQ_MS / 0x100000000) + this.hpet_offset_high | 0;
+                return (ticks() - this.hpet_start) * (HPET_FREQ_MS / 0x100000000) + this.hpet_offset_high | 0;
             }
             else
             {
@@ -207,7 +218,7 @@ export class HPET
                     if(data & 1)
                     {
                         // counter is enabled now, start counting now
-                        this.hpet_start = Date.now();
+                        this.hpet_start = ticks();
                     }
                     else
                     {

@@ -39,7 +39,7 @@ export class NetworkAdapter
         //console.log("onclose", e);
 
         this.connect();
-        setTimeout(this.connect.bind(this), this.reconnect_interval);
+        setTimeout(() => this.connect(), this.reconnect_interval);
     };
 
     public handle_open(e)
@@ -101,10 +101,10 @@ export class NetworkAdapter
 
         this.socket.binaryType = "arraybuffer";
 
-        this.socket.onopen = this.handle_open.bind(this);;
-        this.socket.onmessage = this.handle_message.bind(this);
-        this.socket.onclose = this.handle_close.bind(this);
-        this.socket.onerror = this.handle_error.bind(this);
+        this.socket.onopen = (e) => this.handle_open(e);
+        this.socket.onmessage = (e) => this.handle_message(e);
+        this.socket.onclose = (e) => this.handle_close(e);
+        this.socket.onerror = (e) => this.handle_error(e);
     };
 
     public send(data)

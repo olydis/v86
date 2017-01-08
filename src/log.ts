@@ -10,7 +10,7 @@ function do_the_log(message)
     }
     else
     {
-        console.log(message);
+        //console.log(message);
     }
 }
 

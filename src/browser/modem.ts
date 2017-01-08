@@ -12,10 +12,10 @@ export class ModemAdapter
 
     constructor()
     {
-        this.socket.onopen = this.onopen.bind(this);;
-        this.socket.onmessage = this.onmessage.bind(this);
-        this.socket.onclose = this.onclose.bind(this);
-        this.socket.onerror = this.onerror.bind(this);
+        this.socket.onopen = (e) => this.onopen(e);
+        this.socket.onmessage = (e) => this.onmessage(e);
+        this.socket.onclose = (e) => this.onclose(e);
+        this.socket.onerror = (e) => this.onerror(e);
     }
 
     public send_char()

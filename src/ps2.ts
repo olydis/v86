@@ -57,11 +57,11 @@ export class PS2
             // http://www.computer-engineering.org/ps2mouse/
         }, this);
 
-        cpu.io.register_read(0x60, this, this.port60_read);
-        cpu.io.register_read(0x64, this, this.port64_read);
+        cpu.io.register_read(0x60, this, () => this.port60_read());
+        cpu.io.register_read(0x64, this, () => this.port64_read());
 
-        cpu.io.register_write(0x60, this, this.port60_write);
-        cpu.io.register_write(0x64, this, this.port64_write);
+        cpu.io.register_write(0x60, this, (data_byte) => this.port60_write(data_byte));
+        cpu.io.register_write(0x64, this, (data_byte) => this.port64_write(data_byte));
     }
 
     public get_state()
@@ -170,7 +170,7 @@ export class PS2
 
             if(change_x || change_y)
             {
-                var now = Date.now();
+                //var now = Date.now();
 
                 //if(now - this.last_mouse_packet < 1000 / this.sample_rate)
                 //{

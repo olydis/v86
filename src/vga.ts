@@ -201,36 +201,36 @@ export class VGAScreen
 
         var io = cpu.io;
 
-        io.register_write(0x3C0, this, this.port3C0_write);
-        io.register_read(0x3C0, this, this.port3C0_read, this.port3C0_read16);
+        io.register_write(0x3C0, this, (data_byte) => this.port3C0_write(data_byte));
+        io.register_read(0x3C0, this, () => this.port3C0_read(), () => this.port3C0_read16());
 
-        io.register_read(0x3C1, this, this.port3C1_read);
-        io.register_write(0x3C2, this, this.port3C2_write);
+        io.register_read(0x3C1, this, () => this.port3C1_read());
+        io.register_write(0x3C2, this, () => this.port3C2_write);
 
-        io.register_write_consecutive(0x3C4, this, this.port3C4_write, this.port3C5_write);
+        io.register_write_consecutive(0x3C4, this, (data_byte) => this.port3C4_write(data_byte), (data_byte) => this.port3C5_write(data_byte));
 
-        io.register_read(0x3C4, this, this.port3C4_read);
-        io.register_read(0x3C5, this, this.port3C5_read);
+        io.register_read(0x3C4, this, () => this.port3C4_read());
+        io.register_read(0x3C5, this, () => this.port3C5_read());
 
-        io.register_write_consecutive(0x3CE, this, this.port3CE_write, this.port3CF_write);
+        io.register_write_consecutive(0x3CE, this, (data_byte) => this.port3CE_write(data_byte), (data_byte) => this.port3CF_write(data_byte));
 
-        io.register_read(0x3CE, this, this.port3CE_read);
-        io.register_read(0x3CF, this, this.port3CF_read);
+        io.register_read(0x3CE, this, () => this.port3CE_read());
+        io.register_read(0x3CF, this, () => this.port3CF_read());
 
-        io.register_write(0x3C7, this, this.port3C7_write);
-        io.register_write(0x3C8, this, this.port3C8_write);
-        io.register_write(0x3C9, this, this.port3C9_write);
-        io.register_read(0x3C9, this, this.port3C9_read);
+        io.register_write(0x3C7, this, (data_byte) => this.port3C7_write(data_byte));
+        io.register_write(0x3C8, this, (data_byte) => this.port3C8_write(data_byte));
+        io.register_write(0x3C9, this, (data_byte) => this.port3C9_write(data_byte));
+        io.register_read(0x3C9, this, () => this.port3C9_read());
 
-        io.register_read(0x3CC, this, this.port3CC_read);
+        io.register_read(0x3CC, this, () => this.port3CC_read());
 
-        io.register_write_consecutive(0x3D4, this, this.port3D4_write, this.port3D5_write);
-        io.register_read(0x3D5, this, this.port3D5_read);
+        io.register_write_consecutive(0x3D4, this, (data_byte) => this.port3D4_write(data_byte), (data_byte) => this.port3D5_write(data_byte));
+        io.register_read(0x3D5, this, () => this.port3D5_read());
 
         io.register_read(0x3D4, this, () => { dbg_log("3D4 read", LOG_VGA); return 0; });
         io.register_read(0x3CA, this, () => { dbg_log("3CA read", LOG_VGA); return 0; });
 
-        io.register_read(0x3DA, this, this.port3DA_read);
+        io.register_read(0x3DA, this, () => this.port3DA_read());
 
 
         // Bochs VBE Extensions
@@ -238,10 +238,10 @@ export class VGAScreen
         this.dispi_index = -1;
         this.dispi_enable_value = 0;
 
-        io.register_write(0x1CE, this, undefined, this.port1CE_write);
+        io.register_write(0x1CE, this, undefined, (data_byte) => this.port1CE_write(data_byte));
 
-        io.register_write(0x1CF, this, undefined, this.port1CF_write);
-        io.register_read(0x1CF, this, undefined, this.port1CF_read);
+        io.register_write(0x1CF, this, undefined, (data_byte) => this.port1CF_write(data_byte));
+        io.register_read(0x1CF, this, undefined, () => this.port1CF_read());
 
         if(this.vga_memory_size === undefined || this.vga_memory_size < 4 * VGA_BANK_SIZE)
         {

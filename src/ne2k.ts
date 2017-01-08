@@ -486,13 +486,13 @@ export class Ne2k
         });
 
         io.register_read(this.port | NE_DATAPORT | 0, this,
-                this.data_port_read8,
-                this.data_port_read16,
-                this.data_port_read32);
+                () => this.data_port_read8(),
+                () => this.data_port_read16(),
+                () => this.data_port_read32());
         io.register_write(this.port | NE_DATAPORT | 0, this,
-                this.data_port_write16,
-                this.data_port_write16,
-                this.data_port_write32);
+                (data_byte) => this.data_port_write16(data_byte),
+                (data_byte) => this.data_port_write16(data_byte),
+                (data_byte) => this.data_port_write32(data_byte));
     }
 
     public get_state()

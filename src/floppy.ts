@@ -102,14 +102,14 @@ export class FloppyController
             this.number_of_cylinders = number_of_cylinders;
         }
 
-        this.io.register_read(0x3F0, this, this.port3F0_read);
-        this.io.register_read(0x3F2, this, this.port3F2_read);
-        this.io.register_read(0x3F4, this, this.port3F4_read);
-        this.io.register_read(0x3F5, this, this.port3F5_read);
-        this.io.register_read(0x3F7, this, this.port3F7_read);
+        this.io.register_read(0x3F0, this, () => this.port3F0_read());
+        this.io.register_read(0x3F2, this, () => this.port3F2_read());
+        this.io.register_read(0x3F4, this, () => this.port3F4_read());
+        this.io.register_read(0x3F5, this, () => this.port3F5_read());
+        this.io.register_read(0x3F7, this, () => this.port3F7_read());
 
-        this.io.register_write(0x3F2, this, this.port3F2_write);
-        this.io.register_write(0x3F5, this, this.port3F5_write);
+        this.io.register_write(0x3F2, this, (data_byte) => this.port3F2_write(data_byte));
+        this.io.register_write(0x3F5, this, (data_byte) => this.port3F5_write(data_byte));
     }
 
     public get_state(): any
@@ -231,7 +231,7 @@ export class FloppyController
                     dbg_log(log, LOG_FLOPPY);
                 }
 
-                this.next_command.call(this, this.receiving_command);
+                this.next_command(this.receiving_command);
             }
         }
         else
