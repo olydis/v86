@@ -1,5 +1,4 @@
 import { V86Starter } from "./src/browser/starter";
-import { dump_file } from "./src/browser/main";
 import { dbg_log, dbg_assert } from "./src/log";
 import * as v86util from "./src/lib";
 
@@ -437,17 +436,17 @@ function start_emulation(settings, done)
     });
 };
 
-function main()
+export function main()
 {
     var settings: any = {};
-    settings.initial_state = {
-        "url": "images/AOE/v86state_ingame_bench.bin",
-        "size": 75726848,
-    };
+    // settings.initial_state = {
+    //     "url": "images/AOE/v86state_ingame_bench.bin",
+    //     //"size": 75726848,
+    // };
     settings.hda = {
         "url": "images/AOE/windows98x.img",
         "async": true,
-        "size": 300 * 1024 * 1024,
+        //"size": 300 * 1024 * 1024,
     };
     settings.memory_size = 64 * 1024 * 1024;
     settings.vga_memory_size = 8 * 1024 * 1024;
@@ -473,6 +472,39 @@ function time2str(time)
             v86util.pad0((time / 60 | 0) % 60, 2) + "m " +
             v86util.pad0(time % 60, 2) + "s";
     }
+}
+
+function dump_file(ab, name)
+{
+    if(!(ab instanceof Array))
+    {
+        ab = [ab];
+    }
+
+    var blob = new Blob(ab);
+    download(blob, name);
+}
+
+function download(file_or_blob, name)
+{
+    var a = document.createElement("a");
+    a["download"] = name;
+    a.href = window.URL.createObjectURL(file_or_blob);
+    a.dataset["downloadurl"] = ["application/octet-stream", a["download"], a.href].join(":");
+
+    if(document.createEvent)
+    {
+        var ev = document.createEvent("MouseEvent");
+        ev.initMouseEvent("click", true, true, window,
+                            0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        a.dispatchEvent(ev);
+    }
+    else
+    {
+        a.click();
+    }
+
+    window.URL.revokeObjectURL(a.href);
 }
 
 main();

@@ -1,5 +1,6 @@
 import { h } from "./lib";
-import { CPU } from "./cpu"
+import { CPU } from "./cpu";
+import { ticks } from "./hpet";
 import { dbg_log, dbg_assert } from "./log";
 
 export class v86
@@ -189,7 +190,7 @@ if(typeof performance === "object" && performance.now)
 //}
 else
 {
-    v86.microtick = Date.now;
+    v86.microtick = () => ticks();
 }
 
 
