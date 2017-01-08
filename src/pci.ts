@@ -49,7 +49,7 @@ export class PCI
         this.io = cpu.io;
 
         /*
-        cpu.io.register_write(0xCF9, function(value)
+        cpu.io.register_write(0xCF9, (value) =>
         {
             dbg_log("PCI reboot: " + h(value, 2), LOG_PCI);
 

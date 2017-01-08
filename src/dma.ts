@@ -126,7 +126,7 @@ export class DMA
             var cpu = this.cpu;
             this.channel_addr[channel] += read_count;
 
-            buffer.get(start, read_count, function(data)
+            buffer.get(start, read_count, (data) =>
             {
                 cpu.write_blob(data, addr);
                 fn(false);
@@ -159,9 +159,7 @@ export class DMA
 
             buffer.set(start,
                     this.cpu.mem8.subarray(addr, addr + read_count + 1),
-                    function() {
-                        fn(false);
-                    }
+                    () => fn(false)
                 );
         }
     }

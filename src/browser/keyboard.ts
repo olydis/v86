@@ -13,7 +13,7 @@ export class KeyboardAdapter
      */
     public emu_enabled = true;
 
-    private keys_pressed: { [key: number]: boolean };
+    private keys_pressed: { [key: number]: boolean } = {};
 /**
      * Format:
      * Javascript event.keyCode -> make code
@@ -224,9 +224,9 @@ export class KeyboardAdapter
     {
         if(typeof window !== "undefined")
         {
-            window.removeEventListener("keyup", this.keyup_handler, false);
-            window.removeEventListener("keydown", this.keydown_handler, false);
-            window.removeEventListener("blur", this.blur_handler, false);
+            window.removeEventListener("keyup", (e) => this.keyup_handler(e), false);
+            window.removeEventListener("keydown", (e) => this.keydown_handler(e), false);
+            window.removeEventListener("blur", (e) => this.blur_handler(e), false);
         }
     }
 
@@ -238,9 +238,9 @@ export class KeyboardAdapter
         }
         this.destroy();
 
-        window.addEventListener("keyup", this.keyup_handler, false);
-        window.addEventListener("keydown", this.keydown_handler, false);
-        window.addEventListener("blur", this.blur_handler, false);
+        window.addEventListener("keyup", (e) => this.keyup_handler(e), false);
+        window.addEventListener("keydown", (e) => this.keydown_handler(e), false);
+        window.addEventListener("blur", (e) => this.blur_handler(e), false);
     }
 
     public simulate_press(code)

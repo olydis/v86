@@ -288,10 +288,10 @@ export class IDEDevice
         cpu.io.register_read(this.master_port | 2, this, this.dma_read_status);
         cpu.io.register_write(this.master_port | 2, this, this.dma_write_status);
 
-        cpu.io.register_read(this.master_port | 0x8, this, function() {
+        cpu.io.register_read(this.master_port | 0x8, this, () => {
             dbg_log("DMA read 0x8", LOG_DISK); return 0;
         });
-        cpu.io.register_read(this.master_port | 0xA, this, function() {
+        cpu.io.register_read(this.master_port | 0xA, this, () => {
             dbg_log("DMA read 0xA", LOG_DISK); return 0;
         });
 
@@ -1069,9 +1069,7 @@ export class IDEInterface
         this.ata_advance(this.current_command, this.data_length / 512);
         this.push_irq();
 
-        this.buffer.set(this.write_dest, data, function()
-        {
-        });
+        this.buffer.set(this.write_dest, data, () => { });
 
         this.report_write(this.data_length);
     };
@@ -1627,7 +1625,7 @@ export class IDEInterface
 
         this.buffer.get(start, byte_count, (data) =>
         {
-            //setTimeout(function() {
+            //setTimeout(() => {
             dbg_log("do_ata_read_sectors_dma: Data arrived", LOG_DISK);
             var prdt_start = this.device.prdt_addr;
             var offset = 0;
@@ -1792,10 +1790,7 @@ export class IDEInterface
             //    dbg_log(hex_dump(slice), LOG_DISK);
             //}
 
-            this.buffer.set(start + offset, slice, function()
-            {
-                prdt_write_count++;
-            });
+            this.buffer.set(start + offset, slice, () => { prdt_write_count++; });
 
             offset += prd_count;
             prdt_start += 8;
@@ -1805,7 +1800,7 @@ export class IDEInterface
 
         if(prdt_write_count === prdt_count)
         {
-            //setTimeout(function() {
+            //setTimeout(() => {
             dbg_log("dma write completed", LOG_DISK);
             this.ata_advance(this.current_command, count);
             this.status = 0x50;

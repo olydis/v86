@@ -38,7 +38,7 @@ export class BusConnector
             return;
         }
 
-        this.listeners[name] = listeners.filter(function(l)
+        this.listeners[name] = listeners.filter((l) =>
         {
             return l.fn !== fn
         });

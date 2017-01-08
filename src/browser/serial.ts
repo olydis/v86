@@ -19,20 +19,20 @@ export class SerialAdapter
 
     public destroy()
     {
-        this.element.removeEventListener("keypress", this.keypress_handler, false);
-        this.element.removeEventListener("keydown", this.keydown_handler, false);
-        this.element.removeEventListener("paste", this.paste_handler, false);
-        window.removeEventListener("mousedown", this.window_click_handler, false);
+        this.element.removeEventListener("keypress", (e) => this.keypress_handler(e), false);
+        this.element.removeEventListener("keydown", (e) => this.keydown_handler(e), false);
+        this.element.removeEventListener("paste", (e) => this.paste_handler(e), false);
+        window.removeEventListener("mousedown", (e) => this.window_click_handler(e), false);
     }
 
     public init()
     {
         this.destroy();
 
-        this.element.addEventListener("keypress", this.keypress_handler, false);
-        this.element.addEventListener("keydown", this.keydown_handler, false);
-        this.element.addEventListener("paste", this.paste_handler, false);
-        window.addEventListener("mousedown", this.window_click_handler, false);
+        this.element.addEventListener("keypress", (e) => this.keypress_handler(e), false);
+        this.element.addEventListener("keydown", (e) => this.keydown_handler(e), false);
+        this.element.addEventListener("paste", (e) => this.paste_handler(e), false);
+        window.addEventListener("mousedown", (e) => this.window_click_handler(e), false);
     }
 
     public show_char(chr)

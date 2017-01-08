@@ -2,11 +2,12 @@ import { h } from "./lib";
 import { dbg_log, dbg_assert } from "./log";
 import { v86 } from "./main";
 import { APIC_ADDRESS } from "./apic";
+import { CPU } from "./cpu";
 import * as string from "./string";
 
-var t = [];
-var t16 = [];
-var t32 = [];
+var t: ((cpu: CPU) => void)[] = [];
+var t16: ((cpu: CPU) => void)[] = [];
+var t32: ((cpu: CPU) => void)[] = [];
 
 t[0x00] = cpu => { cpu.read_modrm_byte(); cpu.write_e8(cpu.add8(cpu.read_write_e8(), cpu.read_g8())); };
 t16[0x01] = cpu => { cpu.read_modrm_byte(); cpu.write_e16(cpu.add16(cpu.read_write_e16(), cpu.read_g16())); };
@@ -42,12 +43,8 @@ t32[0x0d] = cpu => { cpu.reg32s[reg_eax] = cpu.or32(cpu.reg32s[reg_eax], cpu.rea
 
 t16[0x0E] = cpu => { cpu.push16(cpu.sreg[reg_cs]); };
 t32[0x0E] = cpu => { cpu.push32(cpu.sreg[reg_cs]); };
-t16[0x0F] = cpu => {
-    cpu.table0F_16[cpu.read_op0F()](cpu);
-};
-t32[0x0F] = cpu => {
-    cpu.table0F_32[cpu.read_op0F()](cpu);
-};
+t16[0x0F] = cpu => { table0F_16[cpu.read_op0F()](cpu); };
+t32[0x0F] = cpu => { table0F_32[cpu.read_op0F()](cpu); };
 
 t[0x10] = cpu => { cpu.read_modrm_byte(); cpu.write_e8(cpu.adc8(cpu.read_write_e8(), cpu.read_g8())); };
 t16[0x11] = cpu => { cpu.read_modrm_byte(); cpu.write_e16(cpu.adc16(cpu.read_write_e16(), cpu.read_g16())); };
@@ -1274,90 +1271,93 @@ t[0xF5] = cpu => {
 };
 
 t[0xF6] = cpu => { cpu.read_modrm_byte();
+    var data: any;
     switch(cpu.modrm_byte >> 3 & 7)
     {
         case 0:
-            var data = cpu.read_e8(); cpu.test8(data, cpu.read_op8());
+            data = cpu.read_e8(); cpu.test8(data, cpu.read_op8());
             break;
         case 1:
-            var data = cpu.read_e8(); cpu.test8(data, cpu.read_op8());
+            data = cpu.read_e8(); cpu.test8(data, cpu.read_op8());
             break;
         case 2:
-            var data = cpu.read_write_e8(); cpu.write_e8(~(data));
+            data = cpu.read_write_e8(); cpu.write_e8(~(data));
             break;
         case 3:
-            var data = cpu.read_write_e8(); cpu.write_e8(cpu.neg8(data));
+            data = cpu.read_write_e8(); cpu.write_e8(cpu.neg8(data));
             break;
         case 4:
-            var data = cpu.read_e8(); cpu.mul8(data);
+            data = cpu.read_e8(); cpu.mul8(data);
             break;
         case 5:
-            var data = cpu.read_e8s(); cpu.imul8(data);
+            data = cpu.read_e8s(); cpu.imul8(data);
             break;
         case 6:
-            var data = cpu.read_e8(); cpu.div8(data);
+            data = cpu.read_e8(); cpu.div8(data);
             break;
         case 7:
-            var data = cpu.read_e8s(); cpu.idiv8(data);
+            data = cpu.read_e8s(); cpu.idiv8(data);
             break;
     }
 };
 
 t16[0xF7] = cpu => { cpu.read_modrm_byte();
+    var data;
     switch(cpu.modrm_byte >> 3 & 7)
     {
         case 0:
-            var data = cpu.read_e16(); cpu.test16(data, cpu.read_op16());
+            data = cpu.read_e16(); cpu.test16(data, cpu.read_op16());
             break;
         case 1:
-            var data = cpu.read_e16(); cpu.test16(data, cpu.read_op16());
+            data = cpu.read_e16(); cpu.test16(data, cpu.read_op16());
             break;
         case 2:
-            var data = cpu.read_write_e16(); cpu.write_e16(~(data));
+            data = cpu.read_write_e16(); cpu.write_e16(~(data));
             break;
         case 3:
-            var data = cpu.read_write_e16(); cpu.write_e16(cpu.neg16(data));
+            data = cpu.read_write_e16(); cpu.write_e16(cpu.neg16(data));
             break;
         case 4:
-            var data = cpu.read_e16(); cpu.mul16(data);
+            data = cpu.read_e16(); cpu.mul16(data);
             break;
         case 5:
-            var data = cpu.read_e16s(); cpu.imul16(data);
+            data = cpu.read_e16s(); cpu.imul16(data);
             break;
         case 6:
-            var data = cpu.read_e16(); cpu.div16(data);
+            data = cpu.read_e16(); cpu.div16(data);
             break;
         case 7:
-            var data = cpu.read_e16s(); cpu.idiv16(data);
+            data = cpu.read_e16s(); cpu.idiv16(data);
             break;
     }
 };
 t32[0xF7] = cpu => { cpu.read_modrm_byte();
+    var data;
     switch(cpu.modrm_byte >> 3 & 7)
     {
         case 0:
-            var data = cpu.read_e32s(); cpu.test32(data, cpu.read_op32s());
+            data = cpu.read_e32s(); cpu.test32(data, cpu.read_op32s());
             break;
         case 1:
-            var data = cpu.read_e32s(); cpu.test32(data, cpu.read_op32s());
+            data = cpu.read_e32s(); cpu.test32(data, cpu.read_op32s());
             break;
         case 2:
-            var data = cpu.read_write_e32(); cpu.write_e32(~(data));
+            data = cpu.read_write_e32(); cpu.write_e32(~(data));
             break;
         case 3:
-            var data = cpu.read_write_e32(); cpu.write_e32(cpu.neg32(data));
+            data = cpu.read_write_e32(); cpu.write_e32(cpu.neg32(data));
             break;
         case 4:
-            var data = cpu.read_e32(); cpu.mul32(data);
+            data = cpu.read_e32(); cpu.mul32(data);
             break;
         case 5:
-            var data = cpu.read_e32s(); cpu.imul32(data);
+            data = cpu.read_e32s(); cpu.imul32(data);
             break;
         case 6:
-            var data = cpu.read_e32(); cpu.div32(data);
+            data = cpu.read_e32(); cpu.div32(data);
             break;
         case 7:
-            var data = cpu.read_e32s(); cpu.idiv32(data);
+            data = cpu.read_e32s(); cpu.idiv32(data);
             break;
     }
 };

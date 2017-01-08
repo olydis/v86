@@ -1,5 +1,5 @@
 import { h } from "./lib";
-import { CPU } from "./CPU"
+import { CPU } from "./cpu"
 import { dbg_log, dbg_assert } from "./log";
 
 export class v86
@@ -11,10 +11,10 @@ export class v86
 
     constructor(private bus)
     {
-        bus.register("cpu-init", this.init, this);
-        bus.register("cpu-run", this.run, this);
-        bus.register("cpu-stop", this.stop, this);
-        bus.register("cpu-restart", this.restart, this);
+        bus.register("cpu-init", (settings) => this.init(settings), this);
+        bus.register("cpu-run", () => this.run(), this);
+        bus.register("cpu-stop", () => this.stop(), this);
+        bus.register("cpu-restart", () => this.restart(), this);
     }
 
     public fast_next_tick()
@@ -92,9 +92,9 @@ export class v86
 
         if(typeof setImmediate !== "undefined")
         {
-            this.fast_next_tick()
+            this.fast_next_tick = () =>
             {
-                setImmediate(function() { emulator.do_tick(); });
+                setImmediate(() => emulator.do_tick());
             };
         }
         else if(typeof window !== "undefined" && typeof postMessage !== "undefined")
@@ -106,7 +106,7 @@ export class v86
             /** @const */
             var MAGIC_POST_MESSAGE = 0xAA55;
 
-            window.addEventListener("message", function(e)
+            window.addEventListener("message", (e) =>
             {
                 if(e.source === window && e.data === MAGIC_POST_MESSAGE)
                 {
@@ -115,16 +115,16 @@ export class v86
                 }
             }, true);
 
-            this.fast_next_tick()
+            this.fast_next_tick = () =>
             {
                 window.postMessage(MAGIC_POST_MESSAGE, "*");
             };
         }
         else
         {
-            this.fast_next_tick()
+            this.fast_next_tick = () =>
             {
-                setTimeout(function() { emulator.do_tick(); }, 0);
+                setTimeout(() => emulator.do_tick(), 0);
             };
         }
 
@@ -141,7 +141,7 @@ export class v86
                 }
                 else
                 {
-                    setTimeout(function() { emulator.do_tick(); }, t);
+                    setTimeout(() => emulator.do_tick(), t);
                 }
             };
         }
@@ -150,7 +150,7 @@ export class v86
             // In environments that aren't browsers, we might as well use setTimeout
             this.next_tick = (t) =>
             {
-                setTimeout(function() { emulator.do_tick(); }, t);
+                setTimeout(() => emulator.do_tick(), t);
             };
         }
     }

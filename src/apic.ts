@@ -55,18 +55,18 @@ export class APIC
         this.lapic_icr = new Int32Array(2);
 
         io.mmap_register(APIC_ADDRESS, 0x100000,
-            function(addr)
+            (addr) =>
             {
                 dbg_trace();
                 dbg_log("unsupported read8 from apic: " + h(addr), LOG_APIC);
                 return 0;
             },
-            function(addr, value)
+            (addr, value) =>
             {
                 dbg_trace();
                 dbg_log("unsupported write8 from apic: " + h(addr) + " <- " + h(value), LOG_APIC);
             },
-            function(addr)
+            (addr) =>
             {
                 addr = addr - APIC_ADDRESS | 0;
 
@@ -88,7 +88,7 @@ export class APIC
                         return 0;
                 }
             },
-            function(addr, value)
+            (addr, value) =>
             {
                 addr = addr - APIC_ADDRESS | 0;
 
@@ -117,15 +117,15 @@ export class APIC
 
         dbg_assert(MMAP_BLOCK_SIZE >= 0x20);
         io.mmap_register(IOAPIC_ADDRESS, MMAP_BLOCK_SIZE,
-            function(addr)
+            (addr) =>
             {
                 throw "unsupported read8 from ioapic";
             },
-            function(addr, value)
+            (addr, value) =>
             {
                 throw "unsupported write8 from ioapic";
             },
-            function(addr)
+            (addr) =>
             {
                 addr = addr - IOAPIC_ADDRESS | 0;
 
@@ -145,7 +145,7 @@ export class APIC
                     return 0;
                 }
             },
-            function(addr, value)
+            (addr, value) =>
             {
                 addr = addr - IOAPIC_ADDRESS | 0;
 

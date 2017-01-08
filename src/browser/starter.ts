@@ -81,7 +81,7 @@
  */
 
 import { v86 } from "../main";
-import { v86util, SyncBuffer } from "../lib";
+import { AsyncFileBuffer, AsyncXHRBuffer, SyncBuffer, SyncFileBuffer, load_file } from "../lib";
 import { BusConnector, Bus } from "../bus";
 import { NetworkAdapter } from "./network";
 import { KeyboardAdapter } from "./keyboard";
@@ -96,8 +96,8 @@ export class V86Starter
     private cpu_is_running = false;
     private bus: BusConnector;
     private emulator_bus: any;
-    private v86: any;
-    private disk_images: any;
+    public v86: any;
+    public disk_images: any;
     private network_adapter: NetworkAdapter;
     private keyboard_adapter: KeyboardAdapter;
     private mouse_adapter: MouseAdapter;
@@ -315,15 +315,15 @@ export class V86Starter
             this.files_to_load.push({
                 name: name,
                 loadable: file.async
-                    ? new v86util.SyncFileBuffer(file.buffer)
-                    : new v86util.AsyncFileBuffer(file.buffer),
+                    ? new SyncFileBuffer(file.buffer)
+                    : new AsyncFileBuffer(file.buffer),
             });
         }
         else if(file.url)
         {
             if(file.async)
             {
-                var buffer = new v86util.AsyncXHRBuffer(file.url, file.size);
+                var buffer = new AsyncXHRBuffer(file.url, file.size);
                 this.files_to_load.push({
                     name: name,
                     loadable: buffer,
@@ -365,7 +365,7 @@ export class V86Starter
         }
         else
         {
-            v86util.load_file(f.url, {
+            load_file(f.url, {
                 done: (result) =>
                 {
                     this.put_on_settings.call(this, f.name, new SyncBuffer(result));
@@ -475,11 +475,9 @@ export class V86Starter
      *
      * The callback function gets a single argument which depends on the event.
      *
-     * @param {string} event Name of the event.
-     * @param {function(*)} listener The callback function.
      * @export
      */
-    public add_listener(event, listener)
+    public add_listener(event: string, listener)
     {
         this.bus.register(event, listener, this);
     };
@@ -487,11 +485,9 @@ export class V86Starter
     /**
      * Remove an event listener.
      *
-     * @param {string} event
-     * @param {function(*)} listener
      * @export
      */
-    public remove_listener(event, listener)
+    public remove_listener(event: string, listener)
     {
         this.bus.unregister(event, listener);
     };
@@ -508,10 +504,9 @@ export class V86Starter
      * Different versions of the emulator might use a different format for the
      * state buffer.
      *
-     * @param {ArrayBuffer} state
      * @export
      */
-    public restore_state(state)
+    public restore_state(state: ArrayBuffer)
     {
         this.v86.restore_state(state);
     };
@@ -521,10 +516,9 @@ export class V86Starter
      * the callback is an Error object if something went wrong and is null
      * otherwise.
      *
-     * @param {function(Object, ArrayBuffer)} callback
      * @export
      */
-    public save_state(callback)
+    public save_state(callback: (o: any, a: ArrayBuffer) => void)
     {
         // Might become asynchronous at some point
 
@@ -657,10 +651,9 @@ export class V86Starter
      * codes can be found at http://stanislavs.org/helppc/make_codes.html.
      * Do nothing if there is no keyboard controller.
      *
-     * @param {Array.<number>} codes
      * @export
      */
-    public keyboard_send_scancodes(codes)
+    public keyboard_send_scancodes(codes: number[])
     {
         for(var i = 0; i < codes.length; i++)
         {
@@ -713,13 +706,10 @@ export class V86Starter
     /**
      * Set the scaling level of the emulated screen.
      *
-     * @param {number} sx
-     * @param {number} sy
-     *
      * @ignore
      * @export
      */
-    public screen_set_scale(sx, sy)
+    public screen_set_scale(sx: number, sy: number)
     {
         if(this.screen_adapter)
         {
@@ -785,10 +775,8 @@ export class V86Starter
 
     /**
      * Enable or disable sending mouse events to the emulated PS2 controller.
-     *
-     * @param {boolean} enabled
      */
-    public mouse_set_status(enabled)
+    public mouse_set_status(enabled: boolean)
     {
         if(this.mouse_adapter)
         {
@@ -798,11 +786,9 @@ export class V86Starter
 
     /**
      * Enable or disable sending keyboard events to the emulated PS2 controller.
-     *
-     * @param {boolean} enabled
      * @export
      */
-    public keyboard_set_status(enabled)
+    public keyboard_set_status(enabled: boolean)
     {
         if(this.keyboard_adapter)
         {
@@ -813,11 +799,9 @@ export class V86Starter
 
     /**
      * Send a string to the first emulated serial terminal.
-     *
-     * @param {string} data
      * @export
      */
-    public serial0_send(data)
+    public serial0_send(data: string)
     {
         for(var i = 0; i < data.length; i++)
         {
@@ -830,12 +814,9 @@ export class V86Starter
      * been initialized. First argument to the callback is an error object if
      * something went wrong and null otherwise.
      *
-     * @param {string} file
-     * @param {Uint8Array} data
-     * @param {function(Object)=} callback
      * @export
      */
-    public create_file(file, data, callback)
+    public create_file(file: string, data: Uint8Array, callback: (o: any) => void)
     {
         var fs = this.fs9p;
 
@@ -858,7 +839,7 @@ export class V86Starter
 
         if(callback)
         {
-            setTimeout(function()
+            setTimeout(() =>
             {
                 if(not_found)
                 {
@@ -876,11 +857,9 @@ export class V86Starter
      * Read a file in the 9p filesystem. Nothing happens if no filesystem has been
      * initialized.
      *
-     * @param {string} file
-     * @param {function(Object, Uint8Array)} callback
      * @export
      */
-    public read_file(file, callback)
+    public read_file(file: string, callback: (o: any, a: Uint8Array) => void)
     {
         var fs = this.fs9p;
 
@@ -901,7 +880,7 @@ export class V86Starter
             fs.OpenInode(id, undefined);
             fs.AddEvent(
                 id,
-                function()
+                () =>
                 {
                     var data = fs.inodedata[id];
 
@@ -921,9 +900,6 @@ export class V86Starter
 
 /**
  * @ignore
- * @constructor
- *
- * @param {string=} message
  */
 class FileNotFoundError extends Error
 {

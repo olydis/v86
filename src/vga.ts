@@ -227,8 +227,8 @@ export class VGAScreen
         io.register_write_consecutive(0x3D4, this, this.port3D4_write, this.port3D5_write);
         io.register_read(0x3D5, this, this.port3D5_read);
 
-        io.register_read(0x3D4, this, function() { dbg_log("3D4 read", LOG_VGA); return 0; });
-        io.register_read(0x3CA, this, function() { dbg_log("3CA read", LOG_VGA); return 0; });
+        io.register_read(0x3D4, this, () => { dbg_log("3D4 read", LOG_VGA); return 0; });
+        io.register_read(0x3CA, this, () => { dbg_log("3CA read", LOG_VGA); return 0; });
 
         io.register_read(0x3DA, this, this.port3DA_read);
 
@@ -283,14 +283,14 @@ export class VGAScreen
 
         var me = this;
         io.mmap_register(0xA0000, 0x20000,
-            function(addr) { return me.vga_memory_read(addr); },
-            function(addr, value) { me.vga_memory_write(addr, value); }
+            (addr) => { return me.vga_memory_read(addr); },
+            (addr, value) => { me.vga_memory_write(addr, value); }
         );
         io.mmap_register(0xE0000000, this.vga_memory_size,
-            function(addr) { return me.svga_memory_read8(addr); },
-            function(addr, value) { me.svga_memory_write8(addr, value); },
-            function(addr) { return me.svga_memory_read32(addr); },
-            function(addr, value) { me.svga_memory_write32(addr, value); }
+            (addr) => { return me.svga_memory_read8(addr); },
+            (addr, value) => { me.svga_memory_write8(addr, value); },
+            (addr) => { return me.svga_memory_read32(addr); },
+            (addr, value) => { me.svga_memory_write32(addr, value); }
         );
     }
 

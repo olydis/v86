@@ -1,4 +1,4 @@
-import { h, CircularQueue, v86util } from "./lib";
+import { h, CircularQueue, pads } from "./lib";
 import { CPU } from "./cpu";
 import { dbg_log, dbg_assert } from "./log";
 
@@ -315,7 +315,7 @@ export class Debug
         var add = (ip, op) =>
         {
             out += h(ip, 8)  + ":        " +
-                v86util.pads(this.opcode_map[op] || "unkown", 20) + h(op, 2) + "\n";
+                pads(this.opcode_map[op] || "unkown", 20) + h(op, 2) + "\n";
         };
 
         var opcodes;

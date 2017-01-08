@@ -31,14 +31,14 @@ export class MouseAdapter
 
     public destroy()
     {
-        window.removeEventListener("touchstart", this.touch_start_handler, false);
-        window.removeEventListener("touchend", this.touch_end_handler, false);
-        window.removeEventListener("touchmove", this.mousemove_handler, false);
-        window.removeEventListener("mousemove", this.mousemove_handler, false);
-        window.removeEventListener("mousedown", this.mousedown_handler, false);
-        window.removeEventListener("mouseup", this.mouseup_handler, false);
-        window.removeEventListener("DOMMouseScroll", this.mousewheel_handler, false);
-        window.removeEventListener("mousewheel", this.mousewheel_handler, false);
+        window.removeEventListener("touchstart", e => this.touch_start_handler(e), false);
+        window.removeEventListener("touchend", e => this.touch_end_handler(e), false);
+        window.removeEventListener("touchmove", e => this.mousemove_handler(e), false);
+        window.removeEventListener("mousemove", e => this.mousemove_handler(e), false);
+        window.removeEventListener("mousedown", e => this.mousedown_handler(e), false);
+        window.removeEventListener("mouseup", e => this.mouseup_handler(e), false);
+        window.removeEventListener("DOMMouseScroll", e => this.mousewheel_handler(e), false);
+        window.removeEventListener("mousewheel", e => this.mousewheel_handler(e), false);
     }
 
     public init()
@@ -49,14 +49,14 @@ export class MouseAdapter
         }
         this.destroy();
 
-        window.addEventListener("touchstart", this.touch_start_handler, false);
-        window.addEventListener("touchend", this.touch_end_handler, false);
-        window.addEventListener("touchmove", this.mousemove_handler, false);
-        window.addEventListener("mousemove", this.mousemove_handler, false);
-        window.addEventListener("mousedown", this.mousedown_handler, false);
-        window.addEventListener("mouseup", this.mouseup_handler, false);
-        window.addEventListener("DOMMouseScroll", this.mousewheel_handler, false);
-        window.addEventListener("mousewheel", this.mousewheel_handler, false);
+        window.addEventListener("touchstart", e => this.touch_start_handler(e), false);
+        window.addEventListener("touchend", e => this.touch_end_handler(e), false);
+        window.addEventListener("touchmove", e => this.mousemove_handler(e), false);
+        window.addEventListener("mousemove", e => this.mousemove_handler(e), false);
+        window.addEventListener("mousedown", e => this.mousedown_handler(e), false);
+        window.addEventListener("mouseup", e => this.mouseup_handler(e), false);
+        window.addEventListener("DOMMouseScroll", e => this.mousewheel_handler(e), false);
+        window.addEventListener("mousewheel", e => this.mousewheel_handler(e), false);
     }
 
     public is_child(child, parent)

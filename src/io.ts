@@ -46,20 +46,20 @@ export class IO
         }
 
         this.mmap_register(memory_size, 0x100000000 - memory_size,
-            function(addr) {
+            (addr) => {
                 // read outside of the memory size
                 dbg_log("Read from unmapped memory space, addr=" + h(addr >>> 0, 8), LOG_IO);
                 return 0xFF;
             },
-            function(addr, value) {
+            (addr, value) => {
                 // write outside of the memory size
                 dbg_log("Write to unmapped memory space, addr=" + h(addr >>> 0, 8) + " value=" + h(value, 2), LOG_IO);
             },
-            function(addr) {
+            (addr) => {
                 dbg_log("Read from unmapped memory space, addr=" + h(addr >>> 0, 8), LOG_IO);
                 return -1;
             },
-            function(addr, value) {
+            (addr, value) => {
                 dbg_log("Write to unmapped memory space, addr=" + h(addr >>> 0, 8) + " value=" + h(value >>> 0, 8), LOG_IO);
             }
         );
@@ -114,9 +114,9 @@ export class IO
     /**
      * @param {number} port_addr
      * @param {Object} device
-     * @param {function(number)=} w8
-     * @param {function(number)=} w16
-     * @param {function(number)=} w32
+     * @param {(number) =>=} w8
+     * @param {(number) =>=} w16
+     * @param {(number) =>=} w32
      */
     public register_write(port_addr, device, w8, w16?, w32?)
     {
@@ -155,10 +155,10 @@ export class IO
      *
      * @param {number} port_addr
      * @param {!Object} device
-     * @param {function():number} r8_1
-     * @param {function():number} r8_2
-     * @param {function():number=} r8_3
-     * @param {function():number=} r8_4
+     * @param {() =>:number} r8_1
+     * @param {() =>:number} r8_2
+     * @param {() =>:number=} r8_3
+     * @param {() =>:number=} r8_4
      */
     public register_read_consecutive(port_addr, device, r8_1, r8_2, r8_3, r8_4): void
     {
@@ -199,10 +199,10 @@ export class IO
     /**
      * @param {number} port_addr
      * @param {!Object} device
-     * @param {function(number)} w8_1
-     * @param {function(number)} w8_2
-     * @param {function(number)=} w8_3
-     * @param {function(number)=} w8_4
+     * @param {(number) =>} w8_1
+     * @param {(number) =>} w8_2
+     * @param {(number) =>=} w8_3
+     * @param {(number) =>=} w8_4
      */
     public register_write_consecutive(port_addr, device, w8_1, w8_2, w8_3, w8_4): void
     {

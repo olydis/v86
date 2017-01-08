@@ -1,4 +1,4 @@
-import { v86util } from "./lib";
+import * as v86util from "./lib";
 
 export var log_data = [];
 
@@ -15,13 +15,13 @@ function do_the_log(message)
 }
 
 /**
- * @type {function((string|number), number=)}
+ * @type {((string|number) =>, number=)}
  * @const
  */
-export var dbg_log = (function()
+export var dbg_log = (() =>
 {
     /** @const @type {Object.<number, string>} */
-    var dbg_names = LOG_NAMES.reduce(function(a, x)
+    var dbg_names = LOG_NAMES.reduce((a, x) =>
     {
         a[x[0]] = x[1];
         return a;

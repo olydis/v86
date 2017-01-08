@@ -1,4 +1,4 @@
-import { h, v86util } from "./lib";
+import { h, int_log2_byte } from "./lib";
 import { dbg_log, dbg_assert } from "./log";
 import { CPU } from "./cpu";
 
@@ -95,7 +95,7 @@ export class PIC
                 }
 
                 dbg_assert(irq_mask !== 0);
-                var irq_number = v86util.int_log2_byte(irq_mask);
+                var irq_number = int_log2_byte(irq_mask);
                 dbg_assert(irq_mask === (1 << irq_number));
 
                 this.irr &= ~irq_mask; // not in level mode
@@ -148,7 +148,7 @@ export class PIC
                 }
 
                 dbg_assert(irq_mask !== 0);
-                var irq_number = v86util.int_log2_byte(irq_mask);
+                var irq_number = int_log2_byte(irq_mask);
                 dbg_assert(irq_mask === (1 << irq_number));
 
                 this.irr &= ~irq_mask; // not in level mode

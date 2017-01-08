@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "amd",
         "alwaysStrict": true,
         "noImplicitReturns": true,
         "noImplicitThis": true,
-        "outDir": "build/src"
+        "outDir": "build"
     },
     "exclude": [
         "node_modules"

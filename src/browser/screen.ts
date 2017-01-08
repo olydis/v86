@@ -210,7 +210,9 @@ export class ScreenAdapter
 
     public timer()
     {
-        requestAnimationFrame(this.is_graphical ? this.update_graphical : this.update_text);
+        requestAnimationFrame(this.is_graphical
+            ? () => this.update_graphical() 
+            : () => this.update_text());
     }
 
     public update_text()

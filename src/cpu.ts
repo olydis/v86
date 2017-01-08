@@ -1,4 +1,4 @@
-import { h, v86util } from "./lib";
+import { h, int_log2 } from "./lib";
 import { table16, table32, table0F_16, table0F_32 } from "./instructions";
 import { Debug } from "./debug";
 import { ACPI } from "./acpi";
@@ -64,7 +64,7 @@ export class CPU
 
     private mem_page_infos: any = undefined;
 
-    private segment_is_null = new Uint8Array(0);
+    public segment_is_null = new Uint8Array(0);
     public segment_offsets = new Int32Array(0);
     public segment_limits = new Uint32Array(0);
     //private segment_infos = [];
@@ -114,7 +114,7 @@ export class CPU
     public cpl = 0;
 
     // if false, pages are 4 KiB, else 4 Mib
-    private page_size_extensions = 0;
+    public page_size_extensions = 0;
 
     // current operand/address/stack size
     public is_32 = false;
@@ -134,10 +134,10 @@ export class CPU
     private eip_phys = 0;
     private last_virt_esp = 0;
     private esp_phys = 0;
-    private sysenter_cs = 0;
-    private sysenter_esp = 0;
-    private sysenter_eip = 0;
-    private prefixes = 0;
+    public sysenter_cs = 0;
+    public sysenter_esp = 0;
+    public sysenter_eip = 0;
+    public prefixes = 0;
     public flags = 0;
 
     /**
@@ -158,8 +158,8 @@ export class CPU
     private mul32_result = new Int32Array(2);
     private div32_result = new Float64Array(2);
 
-    private tsc_offset = 0;
-    private modrm_byte = 0;
+    public tsc_offset = 0;
+    public modrm_byte = 0;
     private phys_addr = 0;
     private phys_addr_high = 0;
 
@@ -182,29 +182,31 @@ export class CPU
     private timestamp_counter = 0;
 
     // registers
-    private reg32s = new Int32Array(8);
+    public reg32s = new Int32Array(8);
     public reg32 = new Uint32Array(this.reg32s.buffer);
-    private reg16s = new Int16Array(this.reg32s.buffer);
+    public reg16s = new Int16Array(this.reg32s.buffer);
     public reg16 = new Uint16Array(this.reg32s.buffer);
-    private reg8s = new Int8Array(this.reg32s.buffer);
-    private reg8 = new Uint8Array(this.reg32s.buffer);
+    public reg8s = new Int8Array(this.reg32s.buffer);
+    public reg8 = new Uint8Array(this.reg32s.buffer);
 
     // segment registers, tr and ldtr
     public sreg = new Uint16Array(8);
 
     // debug registers
-    private dreg = new Int32Array(8);
+    public dreg = new Int32Array(8);
 
     // dynamic instruction translator
     private translator = undefined;
 
     public io = undefined;
-    private fpu = undefined;
+    public fpu = undefined;
 
-    private debug: Debug;
+    public debug: Debug;
 
     constructor()
     {
+        this.init_modrm();
+
         this.cr[0] = 0;
         this.cr[2] = 0;
         this.cr[3] = 0;
@@ -561,19 +563,19 @@ export class CPU
 
         var a20_byte = 0;
 
-        io.register_read(0xB3, this, function()
+        io.register_read(0xB3, this, () =>
         {
             // seabios smm_relocate_and_restore
             dbg_log("port 0xB3 read");
             return 0;
         });
 
-        io.register_read(0x92, this, function()
+        io.register_read(0x92, this, () =>
         {
             return a20_byte;
         });
 
-        io.register_write(0x92, this, function(out_byte)
+        io.register_write(0x92, this, (out_byte) =>
         {
             a20_byte = out_byte;
         });
@@ -582,7 +584,7 @@ export class CPU
         {
             // Use by linux for port-IO delay
             // Avoid generating tons of debug messages
-            io.register_write(0x80, this, function(out_byte)
+            io.register_write(0x80, this, (out_byte) =>
             {
             });
         }
@@ -818,6 +820,15 @@ export class CPU
             this.cycle_internal();
         }
     }
+    public do_n_cycles_unsafe(n: number): void
+    {
+        // inner loop:
+        // runs only cycles
+        for(var k = n; k--;)
+        {
+            this.cycle_internal();
+        }
+    }
 
     //var __counts = {};
 
@@ -843,6 +854,7 @@ export class CPU
         //__counts[addr] = __counts[addr] + 1 | 0;
         //this.translate_address_read(this.instruction_pointer + 15|0)
         var opcode = this.read_imm8();
+        console.warn([this.timestamp_counter, this.instruction_pointer, opcode]);
 
         // if(DEBUG)
         // {
@@ -7933,7 +7945,7 @@ export class CPU
             this.flags &= ~flag_zero;
 
             // http://jsperf.com/lowest-bit-index
-            return this.last_result = v86util.int_log2(-bit_base & bit_base);
+            return this.last_result = int_log2(-bit_base & bit_base);
         }
     }
 
@@ -7952,7 +7964,7 @@ export class CPU
         {
             this.flags &= ~flag_zero;
 
-            return this.last_result = v86util.int_log2((-bit_base & bit_base) >>> 0);
+            return this.last_result = int_log2((-bit_base & bit_base) >>> 0);
         }
     }
 
@@ -7970,7 +7982,7 @@ export class CPU
         {
             this.flags &= ~flag_zero;
 
-            return this.last_result = v86util.int_log2(bit_base);
+            return this.last_result = int_log2(bit_base);
         }
     }
 
@@ -7987,7 +7999,7 @@ export class CPU
         else
         {
             this.flags &= ~flag_zero;
-            return this.last_result = v86util.int_log2(bit_base >>> 0);
+            return this.last_result = int_log2(bit_base >>> 0);
         }
     }
 

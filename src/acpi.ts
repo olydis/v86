@@ -27,14 +27,14 @@ export class ACPI
         cpu.devices.pci.register_device(acpi);
 
         // ACPI status
-        io.register_read(0xB004, this, undefined, function()
+        io.register_read(0xB004, this, undefined, () =>
         {
             dbg_log("ACPI status read", LOG_ACPI);
             return 1;
         });
 
         // ACPI, pmtimer
-        io.register_read(0xB008, this, undefined, undefined, function()
+        io.register_read(0xB008, this, undefined, undefined, () =>
         {
             var value = v86.microtick() * (PMTIMER_FREQ / 1000) | 0;
             //dbg_log("pmtimer read: " + h(value >>> 0), LOG_ACPI);

@@ -54,12 +54,12 @@ export class VirtIO
         var io = cpu.io;
 
         io.register_read(0xA800, this,
-            function() {
+            () => {
                 dbg_log("Read device features", LOG_VIRTIO);
                 return 1;
             },
             undefined,
-            function()
+            () =>
             {
                 dbg_log("Read device features", LOG_VIRTIO);
                 return 1;
@@ -197,7 +197,7 @@ export class VirtIO
                 }
             }, undefined, undefined);
 
-            io.register_write(0xA814 + port, this, function(data)
+            io.register_write(0xA814 + port, this, (data) =>
             {
                 dbg_log("Write device " + h(port) + ": " + h(data, 2), LOG_VIRTIO);
             }, undefined, undefined);
