@@ -1,4 +1,4 @@
-"use strict";
+
 
 /** @define {boolean} */
 var DEBUG = true;
@@ -49,9 +49,8 @@ var CPU_LOG_VERBOSE = false;
 
 /**
  * @const
- * @type {Array<Array<string|number>>}
  */
-var LOG_NAMES = [
+var LOG_NAMES: [number, string][] = [
     [1, ""],
     [LOG_CPU, "CPU"],
     [LOG_DISK, "DISK"],

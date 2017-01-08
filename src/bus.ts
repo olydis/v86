@@ -1,104 +1,94 @@
-"use strict";
+import { dbg_assert } from "./log";
 
-var Bus = {};
-
-/** @constructor */
-function BusConnector()
+export class BusConnector
 {
-    this.listeners = {};
-    this.pair = undefined;
-};
+    private listeners: any;
+    public pair: any;
 
-/**
- * @param {string} name
- * @param {function(*=)} fn
- * @param {Object} this_value
- */
-BusConnector.prototype.register = function(name, fn, this_value)
-{
-    var listeners = this.listeners[name];
-
-    if(listeners === undefined)
+    constructor()
     {
-        listeners = this.listeners[name] = [];
+        this.listeners = {};
+        this.pair = undefined;
     }
 
-    listeners.push({
-        fn: fn,
-        this_value: this_value,
-    });
-};
-
-/**
- * Unregister one message with the given name and callback
- *
- * @param {string} name
- * @param {function()} fn
- */
-BusConnector.prototype.unregister = function(name, fn)
-{
-    var listeners = this.listeners[name];
-
-    if(listeners === undefined)
+    public register(name: string, fn /*fnc*/, this_value: any): void
     {
-        return;
+        var listeners = this.listeners[name];
+
+        if(listeners === undefined)
+        {
+            listeners = this.listeners[name] = [];
+        }
+
+        listeners.push({
+            fn: fn,
+            this_value: this_value,
+        });
     }
 
-    this.listeners[name] = listeners.filter(function(l)
+    /**
+     * Unregister one message with the given name and callback
+     */
+    public unregister(name: string, fn /*fnc*/): void
     {
-        return l.fn !== fn
-    });
-};
+        var listeners = this.listeners[name];
 
-/**
- * Send ("emit") a message
- *
- * @param {string} name
- * @param {*=} value
- * @param {*=} unused_transfer
- */
-BusConnector.prototype.send = function(name, value, unused_transfer)
-{
-    if(!this.pair)
-    {
-        return;
+        if(listeners === undefined)
+        {
+            return;
+        }
+
+        this.listeners[name] = listeners.filter(function(l)
+        {
+            return l.fn !== fn
+        });
     }
 
-    var listeners = this.pair.listeners[name];
-
-    if(listeners === undefined)
+    /**
+     * Send ("emit") a message
+     */
+    public send(name: string, value?, unused_transfer?): void
     {
-        return;
+        if(!this.pair)
+        {
+            return;
+        }
+
+        var listeners = this.pair.listeners[name];
+
+        if(listeners === undefined)
+        {
+            return;
+        }
+
+        for(var i = 0; i < listeners.length; i++)
+        {
+            var listener = listeners[i];
+            listener.fn.call(listener.this_value, value);
+        }
     }
 
-    for(var i = 0; i < listeners.length; i++)
+    /**
+     * Send a message, guaranteeing that it is received asynchronously
+     */
+    public send_async(name: string, value: any): void
     {
-        var listener = listeners[i];
-        listener.fn.call(listener.this_value, value);
+        dbg_assert(arguments.length === 1 || arguments.length === 2);
+
+        setTimeout(this.send.bind(this, name, value), 0);
     }
-};
+}
 
-/**
- * Send a message, guaranteeing that it is received asynchronously
- *
- * @param {string} name
- * @param {Object=} value
- */
-BusConnector.prototype.send_async = function(name, value)
+export class Bus
 {
-    dbg_assert(arguments.length === 1 || arguments.length === 2);
+    public static create = () =>
+    {
+        var c0 = new BusConnector();
+        var c1 = new BusConnector();
 
-    setTimeout(this.send.bind(this, name, value), 0);
-};
+        c0.pair = c1;
+        c1.pair = c0;
 
-Bus.create = function()
-{
-    var c0 = new BusConnector();
-    var c1 = new BusConnector();
-
-    c0.pair = c1;
-    c1.pair = c0;
-
-    return [c0, c1];
-};
-
+        return [c0, c1];
+    }
+}

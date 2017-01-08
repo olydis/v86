@@ -1,4 +1,4 @@
-"use strict";
+import { BusConnector } from "../bus";
 
 /** @const */
 var SHIFT_SCAN_CODE = 0x2A;
@@ -6,33 +6,19 @@ var SHIFT_SCAN_CODE = 0x2A;
 /** @const */
 var SCAN_CODE_RELEASE = 0x80;
 
-/**
- * @constructor
- *
- * @param {BusConnector} bus
- */
-function KeyboardAdapter(bus)
+export class KeyboardAdapter
 {
-    var
-        /**
-         * @type {!Object.<boolean>}
-         */
-        keys_pressed = {},
-
-        keyboard = this;
-
     /**
      * Set by emulator
-     * @type {boolean}
      */
-    this.emu_enabled = true;
+    public emu_enabled = true;
 
-    /**
+    private keys_pressed: { [key: number]: boolean };
+/**
      * Format:
      * Javascript event.keyCode -> make code
-     * @const
      */
-    var charmap = new Uint16Array([
+    private readonly charmap = new Uint16Array([
         0, 0, 0, 0,  0, 0, 0, 0,
         // 0x08: backspace, tab, enter
         0x0E, 0x0F, 0, 0,  0, 0x1C, 0, 0,
@@ -111,8 +97,8 @@ function KeyboardAdapter(bus)
      * ascii -> javascript event code (US layout)
      * @const
      */
-    var asciimap = {10: 13, 32: 32, 39: 222, 44: 188, 45: 189, 46: 190, 47: 191, 48: 48, 49: 49, 50: 50, 51: 51, 52: 52, 53: 53, 54: 54, 55: 55, 56: 56, 57: 57, 59: 186, 61: 187, 91: 219, 92: 220, 93: 221, 96: 192, 97: 65, 98: 66, 99: 67, 100: 68, 101: 69, 102: 70, 103: 71, 104: 72, 105: 73, 106: 74, 107: 75, 108: 76, 109: 77, 110: 78, 111: 79, 112: 80, 113: 81, 114: 82, 115: 83, 116: 84, 117: 85, 118: 86, 119: 87, 120: 88, 121: 89, 122: 90};
-    var asciimap_shift = {33: 49, 34: 222, 35: 51, 36: 52, 37: 53, 38: 55, 40: 57, 41: 48, 42: 56, 43: 187, 58: 186, 60: 188, 62: 190, 63: 191, 64: 50, 65: 65, 66: 66, 67: 67, 68: 68, 69: 69, 70: 70, 71: 71, 72: 72, 73: 73, 74: 74, 75: 75, 76: 76, 77: 77, 78: 78, 79: 79, 80: 80, 81: 81, 82: 82, 83: 83, 84: 84, 85: 85, 86: 86, 87: 87, 88: 88, 89: 89, 90: 90, 94: 54, 95: 189, 123: 219, 124: 220, 125: 221, 126: 192}
+    private readonly asciimap = {10: 13, 32: 32, 39: 222, 44: 188, 45: 189, 46: 190, 47: 191, 48: 48, 49: 49, 50: 50, 51: 51, 52: 52, 53: 53, 54: 54, 55: 55, 56: 56, 57: 57, 59: 186, 61: 187, 91: 219, 92: 220, 93: 221, 96: 192, 97: 65, 98: 66, 99: 67, 100: 68, 101: 69, 102: 70, 103: 71, 104: 72, 105: 73, 106: 74, 107: 75, 108: 76, 109: 77, 110: 78, 111: 79, 112: 80, 113: 81, 114: 82, 115: 83, 116: 84, 117: 85, 118: 86, 119: 87, 120: 88, 121: 89, 122: 90};
+    private readonly asciimap_shift = {33: 49, 34: 222, 35: 51, 36: 52, 37: 53, 38: 55, 40: 57, 41: 48, 42: 56, 43: 187, 58: 186, 60: 188, 62: 190, 63: 191, 64: 50, 65: 65, 66: 66, 67: 67, 68: 68, 69: 69, 70: 70, 71: 71, 72: 72, 73: 73, 74: 74, 75: 75, 76: 76, 77: 77, 78: 78, 79: 79, 80: 80, 81: 81, 82: 82, 83: 83, 84: 84, 85: 85, 86: 86, 87: 87, 88: 88, 89: 89, 90: 90, 94: 54, 95: 189, 123: 219, 124: 220, 125: 221, 126: 192}
 
     // From:
     // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code#Code_values_on_Linux_%28X11%29_%28When_scancode_is_available%29
@@ -120,7 +106,7 @@ function KeyboardAdapter(bus)
     // http://www.computer-engineering.org/ps2keyboard/scancodes1.html
     //
     // Mapping from event.code to scancode
-    var codemap = {
+    private readonly codemap = {
         "Escape": 0x0001,
         "Digit1": 0x0002,
         "Digit2": 0x0003,
@@ -229,19 +215,22 @@ function KeyboardAdapter(bus)
         "ContextMenu": 0xe05d,
     };
 
-    this.bus = bus;
+    constructor(private bus: BusConnector)
+    {
+        this.init();
+    }
 
-    this.destroy = function()
+    public destroy()
     {
         if(typeof window !== "undefined")
         {
-            window.removeEventListener("keyup", keyup_handler, false);
-            window.removeEventListener("keydown", keydown_handler, false);
-            window.removeEventListener("blur", blur_handler, false);
+            window.removeEventListener("keyup", this.keyup_handler, false);
+            window.removeEventListener("keydown", this.keydown_handler, false);
+            window.removeEventListener("blur", this.blur_handler, false);
         }
-    };
+    }
 
-    this.init = function()
+    public init()
     {
         if(typeof window === "undefined")
         {
@@ -249,49 +238,48 @@ function KeyboardAdapter(bus)
         }
         this.destroy();
 
-        window.addEventListener("keyup", keyup_handler, false);
-        window.addEventListener("keydown", keydown_handler, false);
-        window.addEventListener("blur", blur_handler, false);
-    };
-    this.init();
+        window.addEventListener("keyup", this.keyup_handler, false);
+        window.addEventListener("keydown", this.keydown_handler, false);
+        window.addEventListener("blur", this.blur_handler, false);
+    }
 
-    this.simulate_press = function(code)
+    public simulate_press(code)
     {
         var ev = { keyCode: code };
-        handler(ev, true);
-        handler(ev, false);
-    };
+        this.handler(ev, true);
+        this.handler(ev, false);
+    }
 
-    this.simulate_char = function(chr)
+    public simulate_char(chr)
     {
         var code = chr.charCodeAt(0);
 
-        if(code in asciimap)
+        if(code in this.asciimap)
         {
-            this.simulate_press(asciimap[code]);
+            this.simulate_press(this.asciimap[code]);
         }
-        else if(code in asciimap_shift)
+        else if(code in this.asciimap_shift)
         {
-            send_to_controller(SHIFT_SCAN_CODE);
-            this.simulate_press(asciimap_shift[code]);
-            send_to_controller(SHIFT_SCAN_CODE | SCAN_CODE_RELEASE);
+            this.send_to_controller(SHIFT_SCAN_CODE);
+            this.simulate_press(this.asciimap_shift[code]);
+            this.send_to_controller(SHIFT_SCAN_CODE | SCAN_CODE_RELEASE);
         }
         else
         {
             console.log("ascii -> keyCode not found: ", code, chr);
         }
-    };
+    }
 
-    function may_handle(e)
+    public may_handle(e)
     {
         if(e.shiftKey && e.ctrlKey && e.keyCode === 74)
         {
-              // don't prevent opening chromium dev tools
-              // maybe add other important combinations here, too
-              return false;
+            // don't prevent opening chromium dev tools
+            // maybe add other important combinations here, too
+            return false;
         }
 
-        if(!keyboard.emu_enabled)
+        if(!this.emu_enabled)
         {
             return false;
         }
@@ -308,11 +296,11 @@ function KeyboardAdapter(bus)
         }
     }
 
-    function translate(e)
+    public translate(e)
     {
         if(e.code !== undefined)
         {
-            var code = codemap[e.code];
+            var code = this.codemap[e.code];
 
             if(code !== undefined)
             {
@@ -320,62 +308,62 @@ function KeyboardAdapter(bus)
             }
         }
 
-        return charmap[e.keyCode];
+        return this.charmap[e.keyCode];
     }
 
-    function keyup_handler(e)
+    public keyup_handler(e)
     {
-        return handler(e, false);
+        return this.handler(e, false);
     }
 
-    function keydown_handler(e)
+    public keydown_handler(e)
     {
-        return handler(e, true);
+        return this.handler(e, true);
     }
 
-    function blur_handler(e)
+    public blur_handler(e)
     {
         // trigger keyup for all pressed keys
-        var keys = Object.keys(keys_pressed),
+        var keys = Object.keys(this.keys_pressed),
             key;
 
         for(var i = 0; i < keys.length; i++)
         {
             key = +keys[i];
 
-            if(keys_pressed[key])
+            if(this.keys_pressed[key])
             {
-                handle_code(key, false);
+                this.handle_code(key, false);
             }
         }
 
-        keys_pressed = {};
+        this.keys_pressed = {};
     }
 
     /**
      * @param {boolean} keydown
      */
-    function handler(e, keydown)
+    public handler(e, keydown)
     {
-        if(!keyboard.bus)
+        if(!this.bus)
         {
-            return;
+            return undefined;
         }
 
-        if(!may_handle(e))
+        if(!this.may_handle(e))
         {
-            return;
+            return undefined;
         }
 
-        var code = translate(e);
+        var code = this.translate(e);
 
         if(!code)
         {
             console.log("Missing char in map: " + e.keyCode.toString(16));
-            return;
+            return undefined;
         }
 
-        handle_code(code, keydown);
+        this.handle_code(code, keydown);
 
         e.preventDefault && e.preventDefault();
 
@@ -386,25 +374,25 @@ function KeyboardAdapter(bus)
      * @param {number} code
      * @param {boolean} keydown
      */
-    function handle_code(code, keydown)
+    public handle_code(code, keydown)
     {
         if(keydown)
         {
-            if(keys_pressed[code])
+            if(this.keys_pressed[code])
             {
-                handle_code(code, false);
+                this.handle_code(code, false);
             }
         }
         else
         {
-            if(!keys_pressed[code])
+            if(!this.keys_pressed[code])
             {
                 // stray keyup
                 return;
             }
         }
 
-        keys_pressed[code] = keydown;
+        this.keys_pressed[code] = keydown;
 
         if(!keydown)
         {
@@ -415,18 +403,17 @@ function KeyboardAdapter(bus)
         if(code > 0xFF)
         {
             // prefix
-            send_to_controller(code >> 8);
-            send_to_controller(code & 0xFF);
+            this.send_to_controller(code >> 8);
+            this.send_to_controller(code & 0xFF);
         }
         else
         {
-            send_to_controller(code);
+            this.send_to_controller(code);
         }
     }
 
-    function send_to_controller(code)
+    public send_to_controller(code)
     {
-        keyboard.bus.send("keyboard-code", code);
+        this.bus.send("keyboard-code", code);
     }
 }
-

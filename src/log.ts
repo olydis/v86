@@ -1,6 +1,6 @@
-"use strict";
+import { v86util } from "./lib";
 
-var log_data = [];
+export var log_data = [];
 
 function do_the_log(message)
 {
@@ -18,7 +18,7 @@ function do_the_log(message)
  * @type {function((string|number), number=)}
  * @const
  */
-var dbg_log = (function()
+export var dbg_log = (function()
 {
     /** @const @type {Object.<number, string>} */
     var dbg_names = LOG_NAMES.reduce(function(a, x)
@@ -33,7 +33,7 @@ var dbg_log = (function()
     /**
      * @param {number=} level
      */
-    function dbg_log_(stuff, level)
+    function dbg_log_(stuff: any, level?: number)
     {
         if(!DEBUG) return;
 
@@ -82,10 +82,7 @@ var dbg_log = (function()
     return dbg_log_;
 })();
 
-/**
- * @param {number=} level
- */
-function dbg_trace(level)
+export function dbg_trace(level?: number)
 {
     if(!DEBUG) return;
 
@@ -93,11 +90,9 @@ function dbg_trace(level)
 }
 
 /**
- * console.assert is fucking slow
- * @param {string=} msg
- * @param {number=} level
+ * console.assert is fucking slow (<- wise words)
  */
-function dbg_assert(cond, msg, level)
+export function dbg_assert(cond: boolean, msg?: string, level?: number)
 {
     if(!DEBUG) return;
 
@@ -114,5 +109,5 @@ function dbg_assert(cond, msg, level)
             throw "Assert failed";
         }
     }
-};
+}
 

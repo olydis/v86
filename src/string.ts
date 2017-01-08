@@ -1,4 +1,5 @@
-"use strict";
+
+import { dbg_log, dbg_assert } from "./log";
 
 /*
  * string operations
@@ -14,10 +15,10 @@
  */
 
 /** @const */
-var MAX_COUNT_PER_CYCLE = 0x1000;
+export var MAX_COUNT_PER_CYCLE = 0x1000;
 
 
-function string_get_cycle_count(size, address)
+export function string_get_cycle_count(size, address)
 {
     dbg_assert(size && size <= 4 && size >= -4);
 
@@ -31,7 +32,7 @@ function string_get_cycle_count(size, address)
     }
 }
 
-function string_get_cycle_count2(size, addr1, addr2)
+export function string_get_cycle_count2(size, addr1, addr2)
 {
     dbg_assert(arguments.length === 3);
 
@@ -40,248 +41,7 @@ function string_get_cycle_count2(size, addr1, addr2)
             string_get_cycle_count(size, addr2));
 }
 
-
-CPU.prototype.movsb = function()
-{
-    var cpu = this;
-    var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
-    var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
-    var size = cpu.flags & flag_direction ? -1 : 1;
-
-    if(cpu.prefixes & PREFIX_MASK_REP)
-    {
-        var count = cpu.get_reg_asize(reg_ecx) >>> 0;
-        if(count === 0) return;
-        var cont = false;
-        var start_count = count;
-        var cycle_counter = MAX_COUNT_PER_CYCLE;
-        var phys_src = cpu.translate_address_read(src);
-        var phys_dest = cpu.translate_address_write(dest);
-        if(cpu.paging)
-        {
-            cycle_counter = string_get_cycle_count2(size, src, dest);
-        }
-        do
-        {
-            cpu.write8(phys_dest, cpu.read8(phys_src));
-            phys_dest += size;
-            phys_src += size;
-            cont = --count !== 0;
-        }
-        while(cont && cycle_counter--);
-        var diff = size * (start_count - count) | 0;
-        cpu.add_reg_asize(reg_edi, diff);
-        cpu.add_reg_asize(reg_esi, diff);
-        cpu.set_ecx_asize(count);
-        cpu.timestamp_counter += start_count - count;
-        if(cont)
-        {
-            //cpu.instruction_pointer = cpu.previous_ip;
-            this.movsb();
-        }
-    }
-    else
-    {
-        cpu.safe_write8(dest, cpu.safe_read8(src));
-        cpu.add_reg_asize(reg_edi, size);
-        cpu.add_reg_asize(reg_esi, size);
-    }
-    cpu.diverged();
-}
-
-CPU.prototype.movsw = function()
-{
-    var cpu = this;
-    var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
-    var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
-    var size = cpu.flags & flag_direction ? -2 : 2;
-
-    if(cpu.prefixes & PREFIX_MASK_REP)
-    {
-        var count = cpu.get_reg_asize(reg_ecx) >>> 0;
-        if(count === 0) return;
-        var cont = false;
-        var start_count = count;
-        var cycle_counter = MAX_COUNT_PER_CYCLE;
-        if(!(dest & 1) && !(src & 1))
-        {
-            var single_size = size < 0 ? -1 : 1;
-            var phys_src = cpu.translate_address_read(src) >> 1;
-            var phys_dest = cpu.translate_address_write(dest) >> 1;
-            if(cpu.paging)
-            {
-                cycle_counter = string_get_cycle_count2(size, src, dest);
-            }
-            do
-            {
-                cpu.write_aligned16(phys_dest, cpu.read_aligned16(phys_src));
-                phys_dest += single_size;
-                phys_src += single_size;
-                cont = --count !== 0;
-            }
-            while(cont && cycle_counter--);
-            var diff = size * (start_count - count) | 0;
-            cpu.add_reg_asize(reg_edi, diff);
-            cpu.add_reg_asize(reg_esi, diff);
-            cpu.set_ecx_asize(count);
-            cpu.timestamp_counter += start_count - count;
-        }
-        else
-        {
-            do
-            {
-                cpu.safe_write16(dest, cpu.safe_read16(src));
-                dest += size;
-                cpu.add_reg_asize(reg_edi, size);
-                src += size;
-                cpu.add_reg_asize(reg_esi, size);
-                cont = cpu.decr_ecx_asize() !== 0;
-            }
-            while(cont && cycle_counter--);
-        }
-        if(cont)
-        {
-            //cpu.instruction_pointer = cpu.previous_ip;
-            this.movsw();
-        }
-    }
-    else
-    {
-        cpu.safe_write16(dest, cpu.safe_read16(src));
-        cpu.add_reg_asize(reg_edi, size);
-        cpu.add_reg_asize(reg_esi, size);
-    }
-    cpu.diverged();
-}
-
-CPU.prototype.movsd = function()
-{
-    var cpu = this;
-    //if(cpu.prefixes & PREFIX_MASK_REP)
-    if(false)
-    {
-        // often used by memcpy, well worth optimizing
-        //   using cpu.mem32s.set
-        var ds = cpu.get_seg_prefix(reg_ds),
-            src = ds + cpu.get_reg_asize(reg_esi) | 0,
-            es = cpu.get_seg(reg_es),
-            dest = es + cpu.get_reg_asize(reg_edi) | 0,
-            count = cpu.get_reg_asize(reg_ecx) >>> 0;
-
-        if(!count)
-        {
-            return;
-        }
-
-        // must be page-aligned if cpu.paging is enabled
-        // and dword-aligned in general
-        var align_mask = cpu.paging ? 0xFFF : 3;
-
-        if((dest & align_mask) === 0 &&
-           (src & align_mask) === 0 &&
-           // If df is set, alignment works a different
-           // This should be unlikely
-           (cpu.flags & flag_direction) === 0)
-        {
-            var cont = false;
-            if(cpu.paging)
-            {
-                src = cpu.translate_address_read(src);
-                dest = cpu.translate_address_write(dest);
-
-                if(count > 0x400)
-                {
-                    count = 0x400;
-                    cont = true;
-                }
-            }
-
-            if(!cpu.io.in_mmap_range(src, count) &&
-                !cpu.io.in_mmap_range(dest, count))
-            {
-                var diff = count << 2;
-                cpu.add_reg_asize(reg_ecx, -count);
-                cpu.add_reg_asize(reg_edi, diff);
-                cpu.add_reg_asize(reg_esi, diff);
-
-                dest >>= 2;
-                src >>= 2;
-                cpu.write_blob32(cpu.mem32s.subarray(src, src + count), dest);
-
-                if(cont)
-                {
-                    //cpu.instruction_pointer = cpu.previous_ip;
-                    this.movsd();
-                }
-
-                return;
-            }
-        }
-    }
-
-    var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
-    var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
-    var size = cpu.flags & flag_direction ? -4 : 4;
-
-    if(cpu.prefixes & PREFIX_MASK_REP)
-    {
-        var count = cpu.get_reg_asize(reg_ecx) >>> 0;
-        if(count === 0) return;
-        var cont = false;
-        var start_count = count;
-        var cycle_counter = MAX_COUNT_PER_CYCLE;
-        if(!(dest & 3) && !(src & 3))
-        {
-            var single_size = size < 0 ? -1 : 1;
-            var phys_src = cpu.translate_address_read(src) >>> 2;
-            var phys_dest = cpu.translate_address_write(dest) >>> 2;
-            if(cpu.paging)
-            {
-                cycle_counter = string_get_cycle_count2(size, src, dest);
-            }
-            do
-            {
-                cpu.write_aligned32(phys_dest, cpu.read_aligned32(phys_src));
-                phys_dest += single_size;
-                phys_src += single_size;
-                cont = --count !== 0;
-            }
-            while(cont && cycle_counter--);
-            var diff = size * (start_count - count) | 0;
-            cpu.add_reg_asize(reg_edi, diff);
-            cpu.add_reg_asize(reg_esi, diff);
-            cpu.set_ecx_asize(count);
-            cpu.timestamp_counter += start_count - count;
-        }
-        else
-        {
-            do
-            {
-                cpu.safe_write32(dest, cpu.safe_read32s(src));
-                dest += size;
-                cpu.add_reg_asize(reg_edi, size);
-                src += size;
-                cpu.add_reg_asize(reg_esi, size);
-                cont = cpu.decr_ecx_asize() !== 0;
-            }
-            while(cont && cycle_counter--);
-        }
-        if(cont)
-        {
-            this.instruction_pointer = this.previous_ip;
-            //this.movsd();
-        }
-    }
-    else
-    {
-        cpu.safe_write32(dest, cpu.safe_read32s(src));
-        cpu.add_reg_asize(reg_edi, size);
-        cpu.add_reg_asize(reg_esi, size);
-    }
-    cpu.diverged();
-}
-
-function cmpsb(cpu)
+export function cmpsb(cpu)
 {
     var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
     var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
@@ -333,7 +93,7 @@ function cmpsb(cpu)
     cpu.diverged();
 }
 
-function cmpsw(cpu)
+export function cmpsw(cpu)
 {
     var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
     var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
@@ -403,7 +163,7 @@ function cmpsw(cpu)
     cpu.diverged();
 }
 
-function cmpsd(cpu)
+export function cmpsd(cpu)
 {
     var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
     var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
@@ -473,7 +233,7 @@ function cmpsd(cpu)
     cpu.diverged();
 }
 
-function stosb(cpu)
+export function stosb(cpu)
 {
     var data = cpu.reg8[reg_al];
     var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
@@ -515,7 +275,7 @@ function stosb(cpu)
     cpu.diverged();
 }
 
-function stosw(cpu)
+export function stosw(cpu)
 {
     var data = cpu.reg16[reg_ax];
     var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
@@ -572,7 +332,7 @@ function stosw(cpu)
     cpu.diverged();
 }
 
-function stosd(cpu)
+export function stosd(cpu)
 {
     var data = cpu.reg32s[reg_eax];
     var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
@@ -629,7 +389,7 @@ function stosd(cpu)
     cpu.diverged();
 }
 
-function lodsb(cpu)
+export function lodsb(cpu)
 {
     var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
     var size = cpu.flags & flag_direction ? -1 : 1;
@@ -670,7 +430,7 @@ function lodsb(cpu)
     cpu.diverged();
 }
 
-function lodsw(cpu)
+export function lodsw(cpu)
 {
     var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
     var size = cpu.flags & flag_direction ? -2 : 2;
@@ -702,7 +462,7 @@ function lodsw(cpu)
     cpu.diverged();
 }
 
-function lodsd(cpu)
+export function lodsd(cpu)
 {
     var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
     var size = cpu.flags & flag_direction ? -4 : 4;
@@ -734,7 +494,7 @@ function lodsd(cpu)
     cpu.diverged();
 }
 
-function scasb(cpu)
+export function scasb(cpu)
 {
     var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
     var size = cpu.flags & flag_direction ? -1 : 1;
@@ -780,7 +540,7 @@ function scasb(cpu)
     cpu.diverged();
 }
 
-function scasw(cpu)
+export function scasw(cpu)
 {
     var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
     var size = cpu.flags & flag_direction ? -2 : 2;
@@ -841,7 +601,7 @@ function scasw(cpu)
     cpu.diverged();
 }
 
-function scasd(cpu)
+export function scasd(cpu)
 {
     var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
     var size = cpu.flags & flag_direction ? -4 : 4;
@@ -902,7 +662,7 @@ function scasd(cpu)
     cpu.diverged();
 }
 
-function insb(cpu)
+export function insb(cpu)
 {
     var port = cpu.reg16[reg_dx];
     cpu.test_privileges_for_io(port, 1);
@@ -947,7 +707,7 @@ function insb(cpu)
     cpu.diverged();
 }
 
-function insw(cpu)
+export function insw(cpu)
 {
     var port = cpu.reg16[reg_dx];
     cpu.test_privileges_for_io(port, 2);
@@ -1007,7 +767,7 @@ function insw(cpu)
     cpu.diverged();
 }
 
-function insd(cpu)
+export function insd(cpu)
 {
     var port = cpu.reg16[reg_dx];
     cpu.test_privileges_for_io(port, 4);
@@ -1067,7 +827,7 @@ function insd(cpu)
     cpu.diverged();
 }
 
-function outsb(cpu)
+export function outsb(cpu)
 {
     var port = cpu.reg16[reg_dx];
     cpu.test_privileges_for_io(port, 1);
@@ -1112,7 +872,7 @@ function outsb(cpu)
     cpu.diverged();
 }
 
-function outsw(cpu)
+export function outsw(cpu)
 {
     var port = cpu.reg16[reg_dx];
     cpu.test_privileges_for_io(port, 2);
@@ -1172,7 +932,7 @@ function outsw(cpu)
     cpu.diverged();
 }
 
-function outsd(cpu)
+export function outsd(cpu)
 {
     var port = cpu.reg16[reg_dx];
     cpu.test_privileges_for_io(port, 4);

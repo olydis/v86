@@ -1,49 +1,41 @@
-"use strict";
+import { BusConnector } from "../bus";
+import { dbg_log, dbg_assert } from "../log";
 
-/**
- * @constructor
- *
- * @param {BusConnector} bus
- */
-function SerialAdapter(element, bus)
+export class SerialAdapter
 {
-    var serial = this;
+    private enabled = true;
+    private text = "";
+    private text_new_line = false;
+    private last_update = 0;
 
-    this.enabled = true;
-    this.bus = bus;
-    this.text = "";
-    this.text_new_line = false;
+    private update_timer: number;
 
-    this.last_update = 0;
-
-
-    this.bus.register("serial0-output-char", function(chr)
+    constructor(private element, private bus: BusConnector)
     {
-        this.show_char(chr);
-    }, this);
+        var serial = this;
+        this.bus.register("serial0-output-char", (chr) => this.show_char(chr), this);
+        this.init();
+    }
 
-
-    this.destroy = function()
+    public destroy()
     {
-        element.removeEventListener("keypress", keypress_handler, false);
-        element.removeEventListener("keydown", keydown_handler, false);
-        element.removeEventListener("paste", paste_handler, false);
-        window.removeEventListener("mousedown", window_click_handler, false);
-    };
+        this.element.removeEventListener("keypress", this.keypress_handler, false);
+        this.element.removeEventListener("keydown", this.keydown_handler, false);
+        this.element.removeEventListener("paste", this.paste_handler, false);
+        window.removeEventListener("mousedown", this.window_click_handler, false);
+    }
 
-    this.init = function()
+    public init()
     {
         this.destroy();
 
-        element.addEventListener("keypress", keypress_handler, false);
-        element.addEventListener("keydown", keydown_handler, false);
-        element.addEventListener("paste", paste_handler, false);
-        window.addEventListener("mousedown", window_click_handler, false);
-    };
-    this.init();
+        this.element.addEventListener("keypress", this.keypress_handler, false);
+        this.element.addEventListener("keydown", this.keydown_handler, false);
+        this.element.addEventListener("paste", this.paste_handler, false);
+        window.addEventListener("mousedown", this.window_click_handler, false);
+    }
 
-
-    this.show_char = function(chr)
+    public show_char(chr)
     {
         if(chr === "\x08")
         {
@@ -65,9 +57,9 @@ function SerialAdapter(element, bus)
 
             this.update();
         }
-    };
+    }
 
-    this.update = function()
+    public update()
     {
         var now = Date.now();
         var delta = now - this.last_update;
@@ -96,33 +88,30 @@ function SerialAdapter(element, bus)
             this.last_update = now;
             this.render();
         }
-    };
+    }
 
-    this.render = function()
+    public render()
     {
-        element.value = this.text;
+        this.element.value = this.text;
 
         if(this.text_new_line)
         {
             this.text_new_line = false;
-            element.scrollTop = 1e9;
+            this.element.scrollTop = 1e9;
         }
     }
 
-    /**
-     * @param {number} chr_code
-     */
-    this.send_char = function(chr_code)
+    public send_char(chr_code: number)
     {
-        if(serial.bus)
+        if(this.bus)
         {
-            serial.bus.send("serial0-input", chr_code);
+            this.bus.send("serial0-input", chr_code);
         }
-    };
+    }
 
-    function may_handle(e)
+    public may_handle(e)
     {
-        if(!serial.enabled)
+        if(!this.enabled)
         {
             return false;
         }
@@ -132,44 +121,44 @@ function SerialAdapter(element, bus)
         return true;
     }
 
-    function keypress_handler(e)
+    public keypress_handler(e)
     {
-        if(!serial.bus)
+        if(!this.bus)
         {
             return;
         }
-        if(!may_handle(e))
+        if(!this.may_handle(e))
         {
             return;
         }
 
         var chr = e.which;
 
-        serial.send_char(chr);
+        this.send_char(chr);
         e.preventDefault();
     }
 
-    function keydown_handler(e)
+    public keydown_handler(e)
     {
         var chr = e.which;
 
         if(chr === 8)
         {
             // supress backspace
-            serial.send_char(127);
+            this.send_char(127);
             e.preventDefault();
         }
         else if(chr === 9)
         {
             // tab
-            serial.send_char(9);
+            this.send_char(9);
             e.preventDefault();
         }
     }
 
-    function paste_handler(e)
+    public paste_handler(e)
     {
-        if(!may_handle(e))
+        if(!this.may_handle(e))
         {
             return;
         }
@@ -178,17 +167,17 @@ function SerialAdapter(element, bus)
 
         for(var i = 0; i < data.length; i++)
         {
-            serial.send_char(data.charCodeAt(i));
+            this.send_char(data.charCodeAt(i));
         }
 
         e.preventDefault();
     }
 
-    function window_click_handler(e)
+    public window_click_handler(e)
     {
-        if(e.target !== element)
+        if(e.target !== this.element)
         {
-            element.blur();
+            this.element.blur();
         }
     }
 }

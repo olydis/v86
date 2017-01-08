@@ -1,4 +1,8 @@
-"use strict";
+import { h } from "./lib";
+import { dbg_log, dbg_assert } from "./log";
+import { v86 } from "./main";
+import { APIC_ADDRESS } from "./apic";
+import * as string from "./string";
 
 var t = [];
 var t16 = [];
@@ -60,14 +64,14 @@ t32[0x16] = cpu => { cpu.push32(cpu.sreg[reg_ss]); };
 t16[0x17] = cpu => {
     cpu.switch_seg(reg_ss, cpu.safe_read16(cpu.get_stack_pointer(0)));
     cpu.adjust_stack_reg(2);
-    CACHED_MODE || cpu.clear_prefixes();
-    CACHED_MODE || cpu.cycle_internal();
+    cpu.clear_prefixes();
+    cpu.cycle_internal();
 };
 t32[0x17] = cpu => {
     cpu.switch_seg(reg_ss, cpu.safe_read32s(cpu.get_stack_pointer(0)) & 0xFFFF);
     cpu.adjust_stack_reg(4);
-    CACHED_MODE || cpu.clear_prefixes();
-    CACHED_MODE || cpu.cycle_internal();
+    cpu.clear_prefixes();
+    cpu.cycle_internal();
 };
 
 t[0x18] = cpu => { cpu.read_modrm_byte(); cpu.write_e8(cpu.sbb8(cpu.read_write_e8(), cpu.read_g8())); };
@@ -246,8 +250,6 @@ t[0x65] = cpu => { cpu.segment_prefix_op(reg_gs); };
 
 t[0x66] = cpu => {
     // Operand-size override prefix
-    dbg_assert(!CACHED_MODE || cpu.recording);
-
     cpu.prefixes |= PREFIX_MASK_OPSIZE;
     cpu.run_prefix_instruction();
     cpu.prefixes = 0;
@@ -255,7 +257,6 @@ t[0x66] = cpu => {
 
 t[0x67] = cpu => {
     // Address-size override prefix
-    dbg_assert(!CACHED_MODE || cpu.recording);
     dbg_assert(cpu.is_asize_32() === cpu.is_32);
 
     cpu.prefixes |= PREFIX_MASK_ADDRSIZE;
@@ -283,12 +284,12 @@ t32[0x6B] = cpu => { cpu.read_modrm_byte();
     cpu.write_g32(cpu.imul_reg32(cpu.read_e32s(), cpu.read_op8s()));
 };
 
-t[0x6C] = cpu => { insb(cpu); };
-t16[0x6D] = cpu => { insw(cpu); };
-t32[0x6D] = cpu => { insd(cpu); };
-t[0x6E] = cpu => { outsb(cpu); };
-t16[0x6F] = cpu => { outsw(cpu); };
-t32[0x6F] = cpu => { outsd(cpu); };
+t[0x6C] = cpu => { string.insb(cpu); };
+t16[0x6D] = cpu => { string.insw(cpu); };
+t32[0x6D] = cpu => { string.insd(cpu); };
+t[0x6E] = cpu => { string.outsb(cpu); };
+t16[0x6F] = cpu => { string.outsw(cpu); };
+t32[0x6F] = cpu => { string.outsd(cpu); };
 
 t[0x70] = cpu => { cpu.jmpcc8( cpu.test_o()); };
 t[0x71] = cpu => { cpu.jmpcc8(!cpu.test_o()); };
@@ -402,29 +403,6 @@ t16[0x8B] = cpu => { cpu.read_modrm_byte();
 t32[0x8B] = cpu => { cpu.read_modrm_byte();
     var data = cpu.read_e32s();
     cpu.write_g32(data);
-
-    if(CACHED_MODE)
-    {
-        dbg_assert(cpu.recording);
-        if(cpu.modrm_byte >= 0xC0)
-        {
-            cpu.current_instruction.fn = function XXXXX(cpu)
-            {
-                var modrm_byte = cpu.current_instruction.modrm_byte;
-                cpu.reg32s[modrm_byte >> 3 & 7] = cpu.reg32s[modrm_byte & 7];
-            }
-        }
-        else
-        {
-            //cpu.current_instruction.fn = function YYYYY(cpu)
-            //{
-            //    var modrm_byte = cpu.current_instruction.modrm_byte;
-            //    cpu.reg32s[modrm_byte >> 3 & 7] = cpu.safe_read32s(cpu.modrm_resolve(modrm_byte));
-            //}
-            cpu.current_instruction.fn = new Function("cpu",
-                "cpu.reg32s[" + (cpu.modrm_byte >> 3 & 7) + "] = cpu.safe_read32s(" + cpu.static_modrm_resolve() + ");");
-        }
-    }
 };
 
 t16[0x8C] = cpu => { cpu.read_modrm_byte();
@@ -469,8 +447,8 @@ t[0x8E] = cpu => { cpu.read_modrm_byte();
     if(mod === reg_ss)
     {
         // run next instruction, so no interrupts are handled
-        CACHED_MODE || cpu.clear_prefixes();
-        CACHED_MODE || cpu.cycle_internal();
+        cpu.clear_prefixes();
+        cpu.cycle_internal();
     }
 };
 
@@ -681,9 +659,9 @@ t32[0xA3] = cpu => {
 t[0xA4] = cpu => { cpu.movsb(); };
 t16[0xA5] = cpu => { cpu.movsw(); };
 t32[0xA5] = cpu => { cpu.movsd(); };
-t[0xA6] = cpu => { cmpsb(cpu); };
-t16[0xA7] = cpu => { cmpsw(cpu); };
-t32[0xA7] = cpu => { cmpsd(cpu); };
+t[0xA6] = cpu => { string.cmpsb(cpu); };
+t16[0xA7] = cpu => { string.cmpsw(cpu); };
+t32[0xA7] = cpu => { string.cmpsd(cpu); };
 
 t[0xA8] = cpu => {
     cpu.test8(cpu.reg8[reg_al], cpu.read_op8());
@@ -695,15 +673,15 @@ t32[0xA9] = cpu => {
     cpu.test32(cpu.reg32s[reg_eax], cpu.read_op32s());
 };
 
-t[0xAA] = cpu => { stosb(cpu); };
-t16[0xAB] = cpu => { stosw(cpu); };
-t32[0xAB] = cpu => { stosd(cpu); };
-t[0xAC] = cpu => { lodsb(cpu); };
-t16[0xAD] = cpu => { lodsw(cpu); };
-t32[0xAD] = cpu => { lodsd(cpu); };
-t[0xAE] = cpu => { scasb(cpu); };
-t16[0xAF] = cpu => { scasw(cpu); };
-t32[0xAF] = cpu => { scasd(cpu); };
+t[0xAA] = cpu => { string.stosb(cpu); };
+t16[0xAB] = cpu => { string.stosw(cpu); };
+t32[0xAB] = cpu => { string.stosd(cpu); };
+t[0xAC] = cpu => { string.lodsb(cpu); };
+t16[0xAD] = cpu => { string.lodsw(cpu); };
+t32[0xAD] = cpu => { string.lodsd(cpu); };
+t[0xAE] = cpu => { string.scasb(cpu); };
+t16[0xAF] = cpu => { string.scasw(cpu); };
+t32[0xAF] = cpu => { string.scasd(cpu); };
 
 
 t[0xB0] = cpu => { cpu.reg8[reg_al] = cpu.read_op8(); };
@@ -1428,8 +1406,8 @@ t[0xFB] = cpu => {
     {
         cpu.flags |= flag_interrupt;
 
-        CACHED_MODE || cpu.clear_prefixes();
-        CACHED_MODE || cpu.cycle_internal();
+        cpu.clear_prefixes();
+        cpu.cycle_internal();
 
         cpu.handle_irqs();
     }
@@ -1627,10 +1605,8 @@ t32[0xFF] = cpu => { cpu.read_modrm_byte();
     }
 };
 
-var table16 = [];
-var table32 = [];
-CPU.prototype.table16 = table16;
-CPU.prototype.table32 = table32;
+export var table16 = [];
+export var table32 = [];
 
 for(var i = 0; i < 256; i++)
 {
@@ -2986,7 +2962,7 @@ t[0xC7] = cpu => {
             }
 
             cpu.flags &= ~flags_all;
-            cpu.flags |= has_rand;
+            cpu.flags |= has_rand ? 1 : 0;
             cpu.flags_changed = 0;
             break;
 
@@ -3065,10 +3041,8 @@ t[0xFF] = cpu => {
 };
 
 
-var table0F_16 = [];
-var table0F_32 = [];
-CPU.prototype.table0F_16 = table0F_16;
-CPU.prototype.table0F_32 = table0F_32;
+export var table0F_16 = [];
+export var table0F_32 = [];
 
 for(i = 0; i < 256; i++)
 {

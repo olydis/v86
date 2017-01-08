@@ -1,25 +1,26 @@
-"use strict";
+import { h, CircularQueue, v86util } from "./lib";
+import { CPU } from "./cpu";
+import { dbg_log, dbg_assert } from "./log";
 
-CPU.prototype.debug_init = function()
+export class Debug
 {
-    var cpu = this;
-    var debug = {};
-    this.debug = debug;
-
     /**
      * wheter or not in step mode
      * used for debugging
-     * @type {boolean}
      */
-    debug.step_mode = false;
-    debug.ops = undefined;
-    debug.all_ops = [];
+    private step_mode = false;
+    private ops: CircularQueue = undefined;
+    private all_ops = [];
 
-    debug.trace_all = true;
+    private trace_all = true;
+
+    constructor(private cpu: CPU)
+    {
+    }
 
     // "log" some information visually to the user.
     // Also in non-DEBUG modes
-    debug.show = function(x)
+    public show(x)
     {
         if(typeof document !== "undefined")
         {
@@ -35,22 +36,22 @@ CPU.prototype.debug_init = function()
         }
 
         console.log(x);
-    };
+    }
 
-    debug.init = function()
+    public init()
     {
         if(!DEBUG) return;
 
         // used for debugging
-        debug.ops = new CircularQueue(200000);
+        this.ops = new CircularQueue(200000);
 
-        if(cpu.io)
+        if(this.cpu.io)
         {
             // write seabios debug output to console
             var seabios_debug = "";
 
-            cpu.io.register_write(0x402, this, handle); // seabios
-            cpu.io.register_write(0x500, this, handle); // vgabios
+            this.cpu.io.register_write(0x402, this, handle); // seabios
+            this.cpu.io.register_write(0x500, this, handle); // vgabios
         }
 
         function handle(out_byte)
@@ -65,27 +66,9 @@ CPU.prototype.debug_init = function()
                 seabios_debug += String.fromCharCode(out_byte);
             }
         }
-    };
+    }
 
-    debug.dump_regs = dump_regs;
-    debug.dump_instructions = dump_instructions;
-    debug.get_instructions = get_instructions;
-    debug.dump_regs_short = dump_regs_short;
-    debug.dump_state = dump_state;
-    debug.dump_stack = dump_stack;
-
-    debug.dump_page_directory = dump_page_directory;
-    debug.dump_gdt_ldt = dump_gdt_ldt;
-    debug.dump_idt = dump_idt;
-
-    debug.get_memory_dump = get_memory_dump;
-    debug.memory_hex_dump = memory_hex_dump;
-    debug.used_memory_dump = used_memory_dump;
-
-    debug.step = step;
-    debug.run_until = run_until;
-
-    debug.debugger = function()
+    public debugger()
     {
         if(DEBUG)
         {
@@ -93,14 +76,11 @@ CPU.prototype.debug_init = function()
         }
     }
 
-    /**
-     * @param {string=} msg
-     */
-    debug.unimpl = function(msg)
+    public unimpl(msg: string)
     {
         var s = "Unimplemented" + (msg ? ": " + msg : "");
 
-        debug.show(s);
+        this.show(s);
 
         if(DEBUG)
         {
@@ -109,41 +89,41 @@ CPU.prototype.debug_init = function()
         }
         else
         {
-            debug.show("Execution stopped");
+            this.show("Execution stopped");
             return s;
         }
         //this.name = "Unimplemented";
     }
 
-    function step()
+    public step()
     {
         if(!DEBUG) return;
 
-        if(!cpu.running)
-        {
-            cpu.cycle();
-        }
+        // if(!this.cpu.running)
+        // {
+        //     this.cpu.cycle();
+        // }
 
-        dump_regs_short();
-        var now = Date.now();
+        // this.dump_regs_short();
+        // var now = Date.now();
 
-        cpu.running = false;
-        dump_instructions();
+        // this.cpu.running = false;
+        // this.dump_instructions();
     }
 
-    function run_until()
+    public run_until()
     {
         if(!DEBUG) return;
 
-        cpu.running = false;
-        var a = parseInt(prompt("input hex", ""), 16);
-        if(a) while(cpu.instruction_pointer != a) step();
-        dump_regs();
+        // this.cpu.running = false;
+        // var a = parseInt(prompt("input hex", ""), 16);
+        // if(a) while(this.cpu.instruction_pointer != a) this.step();
+        // this.dump_regs();
     }
 
     // http://ref.x86asm.net/x86reference.xml
     // for debuggin" purposes
-    var opcode_map = [
+    private opcode_map = [
         "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "PUSH", "POP",
         "OR", "OR", "OR", "OR", "OR", "OR", "PUSH", "0F:",
         "ADC", "ADC", "ADC", "ADC", "ADC", "ADC", "PUSH", "POP",
@@ -178,29 +158,29 @@ CPU.prototype.debug_init = function()
         "CLC", "STC", "CLI", "STI", "CLD", "STD", "INC", "INC"
     ];
 
-    debug.logop = function(_ip, op)
+    public logop(_ip, op)
     {
-        if(!DEBUG || !debug.step_mode)
+        if(!DEBUG || !this.step_mode)
         {
             return;
         }
 
-        if(debug.trace_all && debug.all_ops)
+        if(this.trace_all && this.all_ops)
         {
-            debug.all_ops.push(_ip, op);
+            this.all_ops.push(_ip, op);
         }
-        else if(debug.ops)
+        else if(this.ops)
         {
-            debug.ops.add(_ip);
-            debug.ops.add(op);
+            this.ops.add(_ip);
+            this.ops.add(op);
         }
     }
 
-    function dump_stack(start, end)
+    public dump_stack(start, end)
     {
         if(!DEBUG) return;
 
-        var esp = cpu.reg32[reg_esp];
+        var esp = this.cpu.reg32[reg_esp];
         dbg_log("========= STACK ==========");
 
         if(end >= start || end === undefined)
@@ -217,33 +197,33 @@ CPU.prototype.debug_init = function()
 
             line += h(i, 2) + " | ";
 
-            dbg_log(line + h(esp + 4 * i, 8) + " | " + h(cpu.read32s(esp + 4 * i) >>> 0));
+            dbg_log(line + h(esp + 4 * i, 8) + " | " + h(this.cpu.read32s(esp + 4 * i) >>> 0));
         }
     }
 
-    function dump_state(where)
+    public dump_state(where?)
     {
         if(!DEBUG) return;
 
-        var mode = cpu.protected_mode ? "prot" : "real";
-        var vm = (cpu.flags & flag_vm) ? 1 : 0;
-        var iopl = cpu.getiopl();
-        var cpl = cpu.cpl;
-        var cs_eip = h(cpu.sreg[reg_cs], 4) + ":" + h(cpu.get_real_eip() >>> 0, 8);
-        var ss_esp = h(cpu.sreg[reg_ss], 4) + ":" + h(cpu.get_stack_reg() >>> 0, 8);
-        var op_size = cpu.is_32 ? "32" : "16";
-        var if_ = (cpu.flags & flag_interrupt) ? 1 : 0;
+        var mode = this.cpu.protected_mode ? "prot" : "real";
+        var vm = (this.cpu.flags & flag_vm) ? 1 : 0;
+        var iopl = this.cpu.getiopl();
+        var cpl = this.cpu.cpl;
+        var cs_eip = h(this.cpu.sreg[reg_cs], 4) + ":" + h(this.cpu.get_real_eip() >>> 0, 8);
+        var ss_esp = h(this.cpu.sreg[reg_ss], 4) + ":" + h(this.cpu.get_stack_reg() >>> 0, 8);
+        var op_size = this.cpu.is_32 ? "32" : "16";
+        var if_ = (this.cpu.flags & flag_interrupt) ? 1 : 0;
 
-        dbg_log("mode=" + mode + "/" + op_size + " paging=" + (+cpu.paging) + " vm=" + vm +
+        dbg_log("mode=" + mode + "/" + op_size + " paging=" + (+this.cpu.paging) + " vm=" + vm +
                 " iopl=" + iopl + " cpl=" + cpl + " if=" + if_ + " cs:eip=" + cs_eip +
-                " cs_off=" + h(cpu.get_seg(reg_cs) >>> 0, 8) +
-                " flgs=" + h(cpu.get_eflags() >>> 0) +
+                " cs_off=" + h(this.cpu.get_seg(reg_cs) >>> 0, 8) +
+                " flgs=" + h(this.cpu.get_eflags() >>> 0) +
                 " ss:esp=" + ss_esp +
-                " ssize=" + (+cpu.stack_size_32) +
+                " ssize=" + (+this.cpu.stack_size_32) +
                 (where ? " in " + where : ""), LOG_CPU);
     }
 
-    function dump_regs_short()
+    public dump_regs_short()
     {
         if(!DEBUG) return;
 
@@ -259,21 +239,21 @@ CPU.prototype.debug_init = function()
 
         for(var i = 0; i < 4; i++)
         {
-            line1 += r32_names[i] + "="  + h(cpu.reg32[r32[r32_names[i]]], 8) + " ";
-            line2 += r32_names[i+4] + "="  + h(cpu.reg32[r32[r32_names[i+4]]], 8) + " ";
+            line1 += r32_names[i] + "="  + h(this.cpu.reg32[r32[r32_names[i]]], 8) + " ";
+            line2 += r32_names[i+4] + "="  + h(this.cpu.reg32[r32[r32_names[i+4]]], 8) + " ";
         }
 
-        line1 += " eip=" + h(cpu.get_real_eip() >>> 0, 8);
-        line2 += " flg=" + h(cpu.get_eflags(), 8);
+        line1 += " eip=" + h(this.cpu.get_real_eip() >>> 0, 8);
+        line2 += " flg=" + h(this.cpu.get_eflags(), 8);
 
-        line1 += "  ds=" + h(cpu.sreg[reg_ds], 4) + " es=" + h(cpu.sreg[reg_es], 4) + "  fs=" + h(cpu.sreg[reg_fs], 4);
-        line2 += "  gs=" + h(cpu.sreg[reg_gs], 4) + " cs=" + h(cpu.sreg[reg_cs], 4) + "  ss=" + h(cpu.sreg[reg_ss], 4);
+        line1 += "  ds=" + h(this.cpu.sreg[reg_ds], 4) + " es=" + h(this.cpu.sreg[reg_es], 4) + "  fs=" + h(this.cpu.sreg[reg_fs], 4);
+        line2 += "  gs=" + h(this.cpu.sreg[reg_gs], 4) + " cs=" + h(this.cpu.sreg[reg_cs], 4) + "  ss=" + h(this.cpu.sreg[reg_ss], 4);
 
         dbg_log(line1, LOG_CPU);
         dbg_log(line2, LOG_CPU);
     }
 
-    function dump_regs()
+    public dump_regs()
     {
         if(!DEBUG) return;
 
@@ -287,37 +267,37 @@ CPU.prototype.debug_init = function()
             out;
 
 
-        dbg_log("----- DUMP (ip = " + h(cpu.instruction_pointer >>> 0) + ") ----------")
-        dbg_log("protected mode: " + cpu.protected_mode);
+        dbg_log("----- DUMP (ip = " + h(this.cpu.instruction_pointer >>> 0) + ") ----------")
+        dbg_log("protected mode: " + this.cpu.protected_mode);
 
         for(var i in r32)
         {
-            dbg_log(i + " =  " + h(cpu.reg32[r32[i]], 8));
+            dbg_log(i + " =  " + h(this.cpu.reg32[r32[i]], 8));
         }
-        dbg_log("eip =  " + h(cpu.get_real_eip() >>> 0, 8));
+        dbg_log("eip =  " + h(this.cpu.get_real_eip() >>> 0, 8));
 
         for(i in s)
         {
-            dbg_log(i + "  =  " + h(cpu.sreg[s[i]], 4));
+            dbg_log(i + "  =  " + h(this.cpu.sreg[s[i]], 4));
         }
 
         out = "";
 
-        var flg = { "cf": cpu.getcf, "pf": cpu.getpf, "zf": cpu.getzf,  "sf": cpu.getsf,
-                    "of": cpu.getof, "df": flag_direction, "if": flag_interrupt };
+        var flg = { "cf": this.cpu.getcf, "pf": this.cpu.getpf, "zf": this.cpu.getzf,  "sf": this.cpu.getsf,
+                    "of": this.cpu.getof, "df": flag_direction, "if": flag_interrupt };
 
         for(var i in flg)
         {
             if(+flg[i])
             {
-                out += i + "=" + Number(!!(cpu.flags & flg[i])) + " | ";
+                out += i + "=" + Number(!!(this.cpu.flags & flg[i])) + " | ";
             }
             else
             {
                 out += i + "=" + Number(!!flg[i]()) + " | ";
             }
         }
-        out += "iopl=" + cpu.getiopl();
+        out += "iopl=" + this.cpu.getiopl();
         dbg_log(out);
 
 
@@ -326,28 +306,28 @@ CPU.prototype.debug_init = function()
 
     }
 
-    function get_instructions()
+    public get_instructions()
     {
-        if(!DEBUG) return;
+        if(!DEBUG) return null;
 
-        debug.step_mode = true;
+        this.step_mode = true;
 
-        function add(ip, op)
+        var add = (ip, op) =>
         {
             out += h(ip, 8)  + ":        " +
-                v86util.pads(opcode_map[op] || "unkown", 20) + h(op, 2) + "\n";
-        }
+                v86util.pads(this.opcode_map[op] || "unkown", 20) + h(op, 2) + "\n";
+        };
 
         var opcodes;
         var out = "";
 
-        if(debug.trace_all && debug.all_ops)
+        if(this.trace_all && this.all_ops)
         {
-            opcodes = debug.all_ops;
+            opcodes = this.all_ops;
         }
-        else if(debug.ops)
+        else if(this.ops)
         {
-            opcodes = debug.ops.toArray();
+            opcodes = this.ops.toArray();
         }
 
         if(!opcodes)
@@ -360,22 +340,23 @@ CPU.prototype.debug_init = function()
             add(opcodes[i], opcodes[i + 1]);
         }
 
-        debug.ops.clear();
-        debug.all_ops = [];
+        this.ops.clear();
+        this.all_ops = [];
 
         return out;
     }
 
-    function dump_instructions()
+    public dump_instructions()
     {
         if(!DEBUG) return;
 
-        debug.show(get_instructions());
+        this.show(this.get_instructions());
     }
 
-    function dump_gdt_ldt()
+    public dump_gdt_ldt()
     {
         if(!DEBUG) return;
+        var cpu = this.cpu;
 
         dbg_log("gdt: (len = " + h(cpu.gdtr_size) + ")");
         dump_table(cpu.translate_address_system_read(cpu.gdtr_offset), cpu.gdtr_size);
@@ -455,9 +436,10 @@ CPU.prototype.debug_init = function()
         }
     }
 
-    function dump_idt()
+    public dump_idt()
     {
         if(!DEBUG) return;
+        var cpu = this.cpu;
 
         for(var i = 0; i < cpu.idtr_size; i += 8)
         {
@@ -503,9 +485,9 @@ CPU.prototype.debug_init = function()
         }
     }
 
-    function load_page_entry(dword_entry, is_directory)
+    public load_page_entry(dword_entry, is_directory): any
     {
-        if(!DEBUG) return;
+        if(!DEBUG) return null;
 
         if(!(dword_entry & 1))
         {
@@ -537,15 +519,15 @@ CPU.prototype.debug_init = function()
         };
     }
 
-    function dump_page_directory()
+    public dump_page_directory()
     {
         if(!DEBUG) return;
 
         for(var i = 0; i < 1024; i++)
         {
-            var addr = cpu.cr[3] + 4 * i;
-            var dword = cpu.read32s(addr),
-                entry = load_page_entry(dword, true);
+            var addr = this.cpu.cr[3] + 4 * i;
+            var dword = this.cpu.read32s(addr),
+                entry = this.load_page_entry(dword, true) as any;
 
             if(!entry)
             {
@@ -573,9 +555,9 @@ CPU.prototype.debug_init = function()
             for(var j = 0; j < 1024; j++)
             {
                 var sub_addr = entry.address + 4 * j;
-                dword = cpu.read32s(sub_addr);
+                dword = this.cpu.read32s(sub_addr);
 
-                var subentry = load_page_entry(dword, false);
+                var subentry = this.load_page_entry(dword, false) as any;
 
                 if(subentry)
                 {
@@ -595,15 +577,14 @@ CPU.prototype.debug_init = function()
         }
     }
 
-
-    function get_memory_dump(start, count)
+    public get_memory_dump(start, count)
     {
-        if(!DEBUG) return;
+        if(!DEBUG) return null;
 
         if(start === undefined)
         {
             start = 0;
-            count = cpu.memory_size;
+            count = this.cpu.memory_size;
         }
         else if(count === undefined)
         {
@@ -611,11 +592,10 @@ CPU.prototype.debug_init = function()
             start = 0;
         }
 
-        return cpu.mem8.slice(start, start + count).buffer;
+        return this.cpu.mem8.slice(start, start + count).buffer;
     }
 
-
-    function memory_hex_dump(addr, length)
+    public memory_hex_dump(addr, length)
     {
         if(!DEBUG) return;
 
@@ -628,7 +608,7 @@ CPU.prototype.debug_init = function()
 
             for(var j = 0; j < 0x10; j++)
             {
-                byt = cpu.read8(addr + (i << 4) + j);
+                byt = this.cpu.read8(addr + (i << 4) + j);
                 line += h(byt, 2) + " ";
             }
 
@@ -636,7 +616,7 @@ CPU.prototype.debug_init = function()
 
             for(j = 0; j < 0x10; j++)
             {
-                byt = cpu.read8(addr + (i << 4) + j);
+                byt = this.cpu.read8(addr + (i << 4) + j);
                 line += (byt < 33 || byt > 126) ? "." : String.fromCharCode(byt);
             }
 
@@ -644,13 +624,13 @@ CPU.prototype.debug_init = function()
         }
     }
 
-    function used_memory_dump()
+    public used_memory_dump()
     {
         if(!DEBUG) return;
 
         var width = 0x80,
             height = 0x10,
-            block_size = cpu.memory_size / width / height | 0,
+            block_size = this.cpu.memory_size / width / height | 0,
             row;
 
         for(var i = 0; i < height; i++)
@@ -659,17 +639,16 @@ CPU.prototype.debug_init = function()
 
             for(var j = 0; j < width; j++)
             {
-                var used = cpu.mem32s[(i * width + j) * block_size] > 0;
+                var used = this.cpu.mem32s[(i * width + j) * block_size] > 0;
 
                 row += used ? "X" : " ";
             }
 
             dbg_log(row);
         }
-    };
+    }
 
-
-    debug.debug_interrupt = function(interrupt_nr)
+    public debug_interrupt(interrupt_nr)
     {
         //if(interrupt_nr === 0x20)
         //{
@@ -726,5 +705,5 @@ CPU.prototype.debug_init = function()
         //    dbg_log("kolibri syscall");
         //    this.debug.dump_regs_short();
         //}
-    };
+    }
 }

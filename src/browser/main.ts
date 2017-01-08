@@ -1,4 +1,6 @@
-"use strict";
+import { v86util } from "../lib";
+import { dbg_log, dbg_assert, log_data } from "../log";
+import { V86Starter } from "./starter";
 
 (function()
 {
@@ -157,9 +159,9 @@
             return;
         }
 
-        var settings = {};
+        var settings: any = {};
 
-        $("start_emulation").onclick = function()
+        $("start_emulation").onclick = () =>
         {
             $("boot_options").style.display = "none";
             set_profile("custom");
@@ -167,21 +169,21 @@
             var images = [];
             var last_file;
 
-            var floppy_file = $("floppy_image").files[0];
+            var floppy_file = ($("floppy_image") as HTMLInputElement).files[0];
             if(floppy_file)
             {
                 last_file = floppy_file;
                 settings.fda = { buffer: floppy_file };
             }
 
-            var cd_file = $("cd_image").files[0];
+            var cd_file = ($("cd_image") as HTMLInputElement).files[0];
             if(cd_file)
             {
                 last_file = cd_file;
                 settings.cdrom = { buffer: cd_file };
             }
 
-            var hd_file = $("hd_image").files[0];
+            var hd_file = ($("hd_image") as HTMLInputElement).files[0];
             if(hd_file)
             {
                 last_file = hd_file;
@@ -835,13 +837,13 @@
 
             if(element)
             {
-                element.onclick = function(infos, element)
+                element.onclick = () =>
                 {
                     set_profile(infos.id);
                     element.blur();
 
                     start_profile(infos);
-                }.bind(this, infos, element);
+                };
             }
         }
 
@@ -934,11 +936,11 @@
         //    basefs: "http://localhost/v86-images/fs.json",
         //};
 
-        //$("restore_state").onchange = function()
+        //$("restore_state").onchange()
         //{
         //};
 
-        //$("start_test").onclick = function()
+        //$("start_test").onclick()
         //{
         //};
 
@@ -952,7 +954,7 @@
                 continue;
 
             var name = LOG_NAMES[i][1].toLowerCase(),
-                input = document.createElement("input"),
+                input: any = document.createElement("input"),
                 label = document.createElement("label");
 
             input.type = "checkbox";
@@ -975,9 +977,9 @@
             }
         }
 
-        log_levels.onchange = function(e)
+        log_levels.onchange = (e) =>
         {
-            var target = e.target,
+            var target: any = e.target,
                 mask = target.mask;
 
             if(target.checked)
@@ -1014,8 +1016,7 @@
         onload();
     }
 
-    /** @param {?=} done */
-    function start_emulation(settings, done)
+    function start_emulation(settings, done?)
     {
         /** @const */
         var MB = 1024 * 1024;
@@ -1024,7 +1025,7 @@
 
         if(!memory_size)
         {
-            memory_size = parseInt($("memory_size").value, 10) * MB;
+            memory_size = parseInt(($("memory_size") as HTMLInputElement).value, 10) * MB;
 
             if(!memory_size)
             {
@@ -1037,7 +1038,7 @@
 
         if(!vga_memory_size)
         {
-            vga_memory_size = parseInt($("video_memory_size").value, 10) * MB;
+            vga_memory_size = parseInt(($("video_memory_size") as HTMLInputElement).value, 10) * MB;
 
             if(!vga_memory_size)
             {
@@ -1048,7 +1049,7 @@
 
         if(!settings.fda)
         {
-            var floppy_file = $("floppy_image").files[0];
+            var floppy_file = ($("floppy_image") as HTMLInputElement).files[0];
             if(floppy_file)
             {
                 settings.fda = { buffer: floppy_file };
@@ -1095,7 +1096,7 @@
             "screen_container": $("screen_container"),
             "serial_container": $("serial"),
 
-            "boot_order": settings.boot_order || parseInt($("boot_order").value, 16) || 0,
+            "boot_order": settings.boot_order || parseInt(($("boot_order") as HTMLInputElement).value, 16) || 0,
 
             "network_relay_url": "wss://relay.widgetry.org/",
             //"network_relay_url": "ws://localhost:8001/",
@@ -1151,40 +1152,39 @@
         $("loading").style.display = "none";
         $("runtime_options").style.display = "block";
         $("runtime_infos").style.display = "block";
-        document.getElementsByClassName("phone_keyboard")[0].style.display = "block";
 
         if(settings.filesystem)
         {
             init_filesystem_panel(emulator);
         }
 
-        $("run").onclick = function()
+        $("run").onclick = () =>
         {
             if(emulator.is_running())
             {
-                $("run").value = "Run";
+                ($("run") as HTMLInputElement).value = "Run";
                 emulator.stop();
             }
             else
             {
-                $("run").value = "Pause";
+                ($("run") as HTMLInputElement).value = "Pause";
                 emulator.run();
             }
 
             $("run").blur();
         };
 
-        $("exit").onclick = function()
+        $("exit").onclick = () =>
         {
             emulator.stop();
             location.href = location.pathname;
         };
 
-        $("lock_mouse").onclick = function()
+        $("lock_mouse").onclick = () =>
         {
             if(!mouse_is_enabled)
             {
-                $("toggle_mouse").onclick();
+                $("toggle_mouse").onclick(null);
             }
 
             emulator.lock_mouse();
@@ -1193,12 +1193,12 @@
 
         var mouse_is_enabled = true;
 
-        $("toggle_mouse").onclick = function()
+        $("toggle_mouse").onclick = () =>
         {
             mouse_is_enabled = !mouse_is_enabled;
 
             emulator.mouse_set_status(mouse_is_enabled);
-            $("toggle_mouse").value = (mouse_is_enabled ? "Dis" : "En") + "able mouse";
+            ($("toggle_mouse") as HTMLInputElement).value = (mouse_is_enabled ? "Dis" : "En") + "able mouse";
             $("toggle_mouse").blur();
         };
 
@@ -1222,8 +1222,8 @@
             running_time += delta_time;
             last_tick = now;
 
-            $("speed").textContent = last_ips / delta_time | 0;
-            $("avg_speed").textContent = instruction_counter / running_time | 0;
+            $("speed").textContent = (last_ips / delta_time | 0) + "";
+            $("avg_speed").textContent = (instruction_counter / running_time | 0) + "";
             $("running_time").textContent = time2str(running_time / 1000 | 0);
         }
 
@@ -1255,14 +1255,14 @@
 
             $("info_filesystem_status").textContent = "Idle";
             $("info_filesystem_last_file").textContent = args[0]
-            $("info_filesystem_bytes_read").textContent = stats_9p.read;
+            $("info_filesystem_bytes_read").textContent = stats_9p.read + "";
         });
         emulator.add_listener("9p-write-end", function(args)
         {
             stats_9p.write += args[1];
 
             $("info_filesystem_last_file").textContent = args[0]
-            $("info_filesystem_bytes_written").textContent = stats_9p.write;
+            $("info_filesystem_bytes_written").textContent = stats_9p.write + "";
         });
 
         var stats_storage = {
@@ -1283,16 +1283,16 @@
             stats_storage.read_sectors += args[2];
 
             $("info_storage_status").textContent = "Idle";
-            $("info_storage_bytes_read").textContent = stats_storage.read;
-            $("info_storage_sectors_read").textContent = stats_storage.read_sectors;
+            $("info_storage_bytes_read").textContent = stats_storage.read + "";
+            $("info_storage_sectors_read").textContent = stats_storage.read_sectors + "";
         });
         emulator.add_listener("ide-write-end", function(args)
         {
             stats_storage.write += args[1];
             stats_storage.write_sectors += args[2];
 
-            $("info_storage_bytes_written").textContent = stats_storage.write;
-            $("info_storage_sectors_written").textContent = stats_storage.write_sectors;
+            $("info_storage_bytes_written").textContent = stats_storage.write + "";
+            $("info_storage_sectors_written").textContent = stats_storage.write_sectors + "";
         });
 
         var stats_net = {
@@ -1305,14 +1305,14 @@
             stats_net.bytes_received += args[0];
 
             $("info_network").style.display = "block";
-            $("info_network_bytes_received").textContent = stats_net.bytes_received;
+            $("info_network_bytes_received").textContent = stats_net.bytes_received + "";
         });
         emulator.add_listener("eth-transmit-end", function(args)
         {
             stats_net.bytes_transmitted += args[0];
 
             $("info_network").style.display = "block";
-            $("info_network_bytes_transmitted").textContent = stats_net.bytes_transmitted;
+            $("info_network_bytes_transmitted").textContent = stats_net.bytes_transmitted + "";
         });
 
 
@@ -1342,7 +1342,7 @@
         });
 
 
-        $("reset").onclick = function()
+        $("reset").onclick = () =>
         {
             emulator.restart();
             $("reset").blur();
@@ -1364,7 +1364,7 @@
                 return;
             }
 
-            elem.onclick = function(e)
+            elem.onclick = (e) =>
             {
                 let buffer = emulator.disk_images[type];
                 let filename = settings.id + (type === "cdrom" ? ".iso" : ".img");
@@ -1393,13 +1393,13 @@
             }
         }
 
-        $("memory_dump").onclick = function()
+        $("memory_dump").onclick = () =>
         {
             dump_file(emulator.v86.cpu.mem8, "v86memory.bin");
             $("memory_dump").blur();
         };
 
-        //$("memory_dump_dmp").onclick = function()
+        //$("memory_dump_dmp").onclick()
         //{
         //    var memory = emulator.v86.cpu.mem8;
         //    var memory_size = memory.length;
@@ -1425,7 +1425,7 @@
         //    $("memory_dump_dmp").blur();
         //};
 
-        $("save_state").onclick = function()
+        $("save_state").onclick = () =>
         {
             emulator.save_state(function(error, result)
             {
@@ -1443,15 +1443,16 @@
             $("save_state").blur();
         };
 
-        $("load_state").onclick = function()
+        $("load_state").onclick = () =>
         {
             $("load_state_input").click();
             $("load_state").blur();
         };
 
-        $("load_state_input").onchange = function()
+        $("load_state_input").onclick = () =>
         {
-            var file = this.files[0];
+            var x = $("load_state_input") as HTMLInputElement;
+            var file = x.files[0];
 
             if(!file)
             {
@@ -1466,7 +1467,7 @@
             }
 
             var filereader = new FileReader();
-            filereader.onload = function(e)
+            filereader.onload = (e: any) =>
             {
                 try
                 {
@@ -1486,10 +1487,10 @@
             };
             filereader.readAsArrayBuffer(file);
 
-            this.value = "";
+            x.value = "";
         };
 
-        $("ctrlaltdel").onclick = function()
+        $("ctrlaltdel").onclick = () =>
         {
             emulator.keyboard_send_scancodes([
                 0x1D, // ctrl
@@ -1505,7 +1506,7 @@
             $("ctrlaltdel").blur();
         };
 
-        $("alttab").onclick = function()
+        $("alttab").onclick = () =>
         {
             emulator.keyboard_send_scancodes([
                 0x38, // alt
@@ -1523,9 +1524,10 @@
             $("alttab").blur();
         };
 
-        $("scale").onchange = function()
+        $("scale").onchange = () =>
         {
-            var n = parseFloat(this.value);
+            var x = $("scale") as HTMLInputElement;
+            var n = parseFloat(x.value);
 
             if(n || n > 0)
             {
@@ -1533,35 +1535,21 @@
             }
         };
 
-        $("fullscreen").onclick = function()
+        $("fullscreen").onclick = () =>
         {
             emulator.screen_go_fullscreen();
         };
 
-        $("screen_container").onclick = function()
+        $("screen_container").onclick = () =>
         {
             if(mouse_is_enabled && os_uses_mouse)
             {
                 emulator.lock_mouse();
                 $("lock_mouse").blur();
             }
-            else
-            {
-                // allow text selection
-                if(window.getSelection().isCollapsed)
-                {
-                    let phone_keyboard = document.getElementsByClassName("phone_keyboard")[0];
-
-                    // stop mobile browser from scrolling into view when the keyboard is shown
-                    phone_keyboard.style.top = document.body.scrollTop + 100 + "px";
-                    phone_keyboard.style.left = document.body.scrollLeft + 100 + "px";
-
-                    phone_keyboard.focus();
-                }
-            }
         };
 
-        $("take_screenshot").onclick = function()
+        $("take_screenshot").onclick = () =>
         {
             emulator.screen_make_screenshot();
 
@@ -1578,11 +1566,11 @@
         {
             if(e.ctrlKey)
             {
-                window.onbeforeunload = function()
+                window.onbeforeunload = () =>
                 {
                     window.onbeforeunload = null;
                     return "CTRL-W cannot be sent to the emulator.";
-                }
+                };
             }
             else
             {
@@ -1595,12 +1583,13 @@
     {
         $("filesystem_panel").style.display = "block";
 
-        $("filesystem_send_file").onchange = function()
+        $("filesystem_send_file").onchange = () =>
         {
-            Array.prototype.forEach.call(this.files, function(file)
+            var x = $("filesystem_send_file") as HTMLInputElement;
+            Array.prototype.forEach.call(x.files, function(file)
             {
                 var loader = new v86util.SyncFileBuffer(file);
-                loader.onload = function()
+                loader.onload()
                 {
                     loader.get_buffer(function(buffer)
                     {
@@ -1608,38 +1597,40 @@
                     });
                 };
                 loader.load();
-            }, this);
+            }, x);
 
-            this.value = "";
-            this.blur();
+            x.value = "";
+            x.blur();
         };
 
-        $("filesystem_get_file").onkeypress = function(e)
+        $("filesystem_get_file").onkeypress = (e) =>
         {
             if(e.which !== 13)
             {
                 return;
             }
 
-            this.disabled = true;
+            var x = $("filesystem_get_file") as HTMLInputElement;
 
-            emulator.read_file(this.value, function(err, uint8array)
+            x.disabled = true;
+
+            emulator.read_file(x.value, (err, uint8array) =>
             {
-                this.disabled = false;
+                x.disabled = false;
 
                 if(uint8array)
                 {
-                    var filename = this.value.replace(/\/$/, "").split("/");
-                    filename = filename[filename.length - 1] || "root";
+                    var filenames = x.value.replace(/\/$/, "").split("/");
+                    var filename = filename[filename.length - 1] || "root";
 
                     dump_file(uint8array, filename);
-                    this.value = "";
+                    x.value = "";
                 }
                 else
                 {
                     alert("Can't read file");
                 }
-            }.bind(this));
+            });
         };
     }
 
@@ -1666,12 +1657,12 @@
         $("dump_pt").onclick = debug.dump_page_directory.bind(debug);
         $("dump_instructions").onclick = debug.dump_instructions.bind(debug);
 
-        $("dump_log").onclick = function()
+        $("dump_log").onclick = () =>
         {
             dump_file(log_data.join("\n"), "v86.log");
         };
 
-        $("dump_instructions_file").onclick = function()
+        $("dump_instructions_file").onclick = () =>
         {
             var ins = debug.get_instructions();
 
@@ -1682,8 +1673,8 @@
         };
 
         // helps debugging
-        window.emulator = emulator;
-        window.cpu = emulator.v86.cpu;
+        window['emulator'] = emulator;
+        window['cpu'] = emulator.v86.cpu;
     }
 
     function onpopstate(e)

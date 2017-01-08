@@ -1,64 +1,67 @@
-"use strict";
 
-var WorkerBus = {};
+import { dbg_log, dbg_assert, dbg_trace } from "../log";
 
-/** @constructor */
-WorkerBus.Connector = function(pair)
+module WorkerBus
 {
-    this.listeners = {};
-    this.pair = pair;
-
-    pair.addEventListener("message", function(e)
+    class Connector
     {
-        var data = e.data;
-        var listeners = this.listeners[data[0]];
+        private listeners = {};
 
-        for(var i = 0; i < listeners.length; i++)
+        constructor(private pair)
         {
-            var listener = listeners[i];
-            listener.fn.call(listener.this_value, data[1]);
+            pair.addEventListener("message", (e) =>
+            {
+                var data = e.data;
+                var listeners = this.listeners[data[0]];
+
+                for(var i = 0; i < listeners.length; i++)
+                {
+                    var listener = listeners[i];
+                    listener.fn.call(listener.this_value, data[1]);
+                }
+            }, false);
         }
-    }.bind(this), false);
 
-};
+        public register(name, fn, this_value)
+        {
+            var listeners = this.listeners[name];
 
-WorkerBus.Connector.prototype.register = function(name, fn, this_value)
-{
-    var listeners = this.listeners[name];
+            if(listeners === undefined)
+            {
+                listeners = this.listeners[name] = [];
+            }
 
-    if(listeners === undefined)
-    {
-        listeners = this.listeners[name] = [];
+            listeners.push({
+                fn: fn,
+                this_value: this_value,
+            });
+        }
+
+        /**
+         * Send ("emit") a message
+         *
+         * @param {string} name
+         * @param {*=} value
+         * @param {*=} transfer_list
+         */
+        public send(name, value, transfer_list)
+        {
+            dbg_assert(arguments.length >= 1);
+
+            if(!this.pair)
+            {
+                return;
+            }
+
+            this.pair.postMessage([name, value], transfer_list);
+        }
     }
 
-    listeners.push({
-        fn: fn,
-        this_value: this_value,
-    });
-};
-
-/**
- * Send ("emit") a message
- *
- * @param {string} name
- * @param {*=} value
- * @param {*=} transfer_list
- */
-WorkerBus.Connector.prototype.send = function(name, value, transfer_list)
-{
-    dbg_assert(arguments.length >= 1);
-
-    if(!this.pair)
+    function init(worker)
     {
-        return;
+        return new Connector(worker);
     }
-
-    this.pair.postMessage([name, value], transfer_list);
-};
+}
 
 
-WorkerBus.init = function(worker)
-{
-    return new WorkerBus.Connector(worker);
-};
 

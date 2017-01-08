@@ -1,9 +1,10 @@
-"use strict";
 
-var v86util = v86util || {};
+import { dbg_log, dbg_assert } from "./log";
+
+export var v86util = v86util || {};
 
 // pad string with spaces on the right
-v86util.pads = function(str, len)
+v86util.pads = (str, len) =>
 {
     str = str ? str + "" : "";
 
@@ -13,10 +14,10 @@ v86util.pads = function(str, len)
     }
 
     return str;
-}
+};
 
 // pad string with zeros on the left
-v86util.pad0 = function(str, len)
+v86util.pad0 = (str, len) =>
 {
     str = str ? str + "" : "";
 
@@ -30,11 +31,8 @@ v86util.pad0 = function(str, len)
 
 /**
  * number to hex
- * @param {number} n
- * @param {number=} len
- * @return {string}
  */
-function h(n, len)
+export function h(n: number, len?: number): string
 {
     if(!n)
     {
@@ -50,53 +48,42 @@ function h(n, len)
 
 /**
  * Synchronous access to ArrayBuffer
- * @constructor
  */
-function SyncBuffer(buffer)
+export class SyncBuffer
 {
-    this.buffer = buffer;
-    this.byteLength = buffer.byteLength;
-    this.onload = undefined;
-    this.onprogress = undefined;
+    private byteLength: number;
+    private onload: any = undefined;
+    private onprogress: any = undefined;
+
+    constructor(private buffer)
+    {
+        this.byteLength = buffer.byteLength;
+    }
+
+    public load()
+    {
+        this.onload && this.onload({ buffer: this.buffer });
+    }
+
+    public get(start: number, len: number, fn: (arr: Uint8Array) => void): void
+    {
+        dbg_assert(start + len <= this.byteLength);
+        fn(new Uint8Array(this.buffer, start, len));
+    }
+
+    public set(start: number, slice: Uint8Array, fn: () => void): void
+    {
+        dbg_assert(start + slice.byteLength <= this.byteLength);
+
+        new Uint8Array(this.buffer, start, slice.byteLength).set(slice);
+        fn();
+    }
+
+    public get_buffer(fn: (arr: Uint8Array) => void)
+    {
+        fn(this.buffer);
+    }
 }
-
-SyncBuffer.prototype.load = function()
-{
-    this.onload && this.onload({ buffer: this.buffer });
-};
-
-/**
- * @param {number} start
- * @param {number} len
- * @param {function(!Uint8Array)} fn
- */
-SyncBuffer.prototype.get = function(start, len, fn)
-{
-    dbg_assert(start + len <= this.byteLength);
-    fn(new Uint8Array(this.buffer, start, len));
-};
-
-/**
- * @param {number} start
- * @param {!Uint8Array} slice
- * @param {function()} fn
- */
-SyncBuffer.prototype.set = function(start, slice, fn)
-{
-    dbg_assert(start + slice.byteLength <= this.byteLength);
-
-    new Uint8Array(this.buffer, start, slice.byteLength).set(slice);
-    fn();
-};
-
-/**
- * @param {function(!ArrayBuffer)} fn
- */
-SyncBuffer.prototype.get_buffer = function(fn)
-{
-    fn(this.buffer);
-};
-
 
 
 (function()
@@ -116,7 +103,7 @@ SyncBuffer.prototype.get_buffer = function(fn)
      * @param {number} x
      * @return {number}
      */
-    v86util.int_log2_byte = function(x)
+    v86util.int_log2_byte = (x) =>
     {
         dbg_assert(x > 0);
         dbg_assert(x < 0x100);
@@ -129,7 +116,7 @@ SyncBuffer.prototype.get_buffer = function(fn)
      * @param {number} x
      * @return {number}
      */
-    v86util.int_log2 = function(x)
+    v86util.int_log2 = (x) =>
     {
         dbg_assert(x > 0);
 
@@ -165,24 +152,26 @@ SyncBuffer.prototype.get_buffer = function(fn)
 
 
 /**
- * @constructor
- *
  * Queue wrapper around Uint8Array
  * Used by devices such as the PS2 controller
  */
-function ByteQueue(size)
+export class ByteQueue
 {
-    var data = new Uint8Array(size),
-        start,
-        end;
+    public length = 0;
+    private data: Uint8Array;
+    private start: number;
+    private end: number;
 
-    dbg_assert((size & size - 1) === 0);
-
-    this.length = 0;
-
-    this.push = function(item)
+    constructor(private size: number)
     {
-        if(this.length === size)
+        this.data = new Uint8Array(size);
+        dbg_assert((size & size - 1) === 0);
+        this.clear();
+    }
+
+    public push(item)
+    {
+        if(this.length === this.size)
         {
             // intentional overwrite
         }
@@ -191,11 +180,11 @@ function ByteQueue(size)
             this.length++;
         }
 
-        data[end] = item;
-        end = end + 1 & size - 1;
-    };
+        this.data[this.end] = item;
+        this.end = this.end + 1 & this.size - 1;
+    }
 
-    this.shift = function()
+    public shift()
     {
         if(!this.length)
         {
@@ -203,16 +192,16 @@ function ByteQueue(size)
         }
         else
         {
-            var item = data[start];
+            var item = this.data[this.start];
 
-            start = start + 1 & size - 1;
+            this.start = this.start + 1 & this.size - 1;
             this.length--;
 
             return item;
         }
-    };
+    }
 
-    this.peek = function()
+    public peek()
     {
         if(!this.length)
         {
@@ -220,56 +209,51 @@ function ByteQueue(size)
         }
         else
         {
-            return data[start];
+            return this.data[this.start];
         }
-    };
+    }
 
-    this.clear = function()
+    public clear()
     {
-        start = 0;
-        end = 0;
+        this.start = 0;
+        this.end = 0;
         this.length = 0;
-    };
-
-    this.clear();
+    }
 }
 
 
 /**
  * Simple circular queue for logs
- *
- * @param {number} size
- * @constructor
  */
-function CircularQueue(size)
+export class CircularQueue
 {
-    this.data = [];
-    this.index = 0;
-    this.size = size;
+    private data: any[] = [];
+    private index = 0;
+
+    constructor(private size: number)
+    {
+    }
+
+    public add(item)
+    {
+        this.data[this.index] = item;
+        this.index = (this.index + 1) % this.size;
+    }
+
+    public toArray()
+    {
+        return [].slice.call(this.data, this.index).concat([].slice.call(this.data, 0, this.index));
+    }
+
+    public clear()
+    {
+        this.data = [];
+        this.index = 0;
+    }
+
+    public set(new_data: any[])
+    {
+        this.data = new_data;
+        this.index = 0;
+    }
 }
-
-CircularQueue.prototype.add = function(item)
-{
-    this.data[this.index] = item;
-    this.index = (this.index + 1) % this.size;
-};
-
-CircularQueue.prototype.toArray = function()
-{
-    return [].slice.call(this.data, this.index).concat([].slice.call(this.data, 0, this.index));
-};
-
-CircularQueue.prototype.clear = function()
-{
-    this.data = [];
-    this.index = 0;
-};
-
-/**
- * @param {Array} new_data
- */
-CircularQueue.prototype.set = function(new_data)
-{
-    this.data = new_data;
-    this.index = 0;
-};
