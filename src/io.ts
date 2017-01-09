@@ -17,7 +17,6 @@ export class IO
             write32: (x: number) => void,
             device: any
         }[] = [];
-    private readonly devices: any[] = new Array(0x10000);
 
     constructor(private readonly cpu: CPU)
     {

@@ -2,6 +2,7 @@ import { h, ByteQueue } from "./lib";
 import { BusConnector } from "./bus";
 import { CPU } from "./cpu";
 import { dbg_log, dbg_assert } from "./log";
+import { ticks } from "./hpet";
 
 export class PS2
 {
@@ -170,7 +171,7 @@ export class PS2
 
             if(change_x || change_y)
             {
-                //var now = Date.now();
+                //var now = ticks();
 
                 //if(now - this.last_mouse_packet < 1000 / this.sample_rate)
                 //{
@@ -211,7 +212,7 @@ export class PS2
             delta_x = dx,
             delta_y = dy;
 
-        this.last_mouse_packet = Date.now();
+        this.last_mouse_packet = ticks();
 
         //if(this.scaling2)
         //{

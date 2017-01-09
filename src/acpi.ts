@@ -1,6 +1,6 @@
 import { CPU } from "./cpu";
 import { v86 } from "./main";
-import { dbg_log, dbg_assert } from "./log";
+import { dbg_log } from "./log";
 
 /** @const */
 var PMTIMER_FREQ = 3579545;

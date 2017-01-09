@@ -1,6 +1,6 @@
 import { h } from "./lib";
 import { CPU } from "./cpu";
-import { dbg_log, dbg_assert } from "./log";
+import { dbg_log } from "./log";
 
 export class DMA
 {

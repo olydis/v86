@@ -31,9 +31,6 @@ export class ScreenAdapter
     private graphical_mode_width: number;
     private graphical_mode_height: number;
 
-    private modified_pixel_min = 0;
-    private modified_pixel_max = 0;
-
     private changed_rows: any;
 
     // are we in graphical mode now?

@@ -1,6 +1,5 @@
 import { CPU } from "./cpu";
 import { h } from "./lib";
-import { BusConnector } from "./bus";
 import { dbg_log, dbg_assert, dbg_trace } from "./log";
 
 /** @const */

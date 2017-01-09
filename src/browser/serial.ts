@@ -1,5 +1,6 @@
 import { BusConnector } from "../bus";
-import { dbg_log, dbg_assert } from "../log";
+import { dbg_assert } from "../log";
+import { ticks } from "../hpet";
 
 export class SerialAdapter
 {
@@ -12,7 +13,6 @@ export class SerialAdapter
 
     constructor(private element, private bus: BusConnector)
     {
-        var serial = this;
         this.bus.register("serial0-output-char", (chr) => this.show_char(chr), this);
         this.init();
     }
@@ -61,7 +61,7 @@ export class SerialAdapter
 
     public update()
     {
-        var now = Date.now();
+        var now = ticks();
         var delta = now - this.last_update;
 
         if(delta < 16)
@@ -70,7 +70,7 @@ export class SerialAdapter
             {
                 this.update_timer = setTimeout(() => {
                     this.update_timer = undefined;
-                    var now = Date.now();
+                    var now = ticks();
                     dbg_assert(now - this.last_update >= 16);
                     this.last_update = now;
                     this.render();

@@ -118,7 +118,7 @@ export class V86Starter
         var bus = Bus.create();
         var adapter_bus = this.bus = bus[0];
         this.emulator_bus = bus[1];
-        var emulator = this.v86 = new v86(this.emulator_bus);
+        this.v86 = new v86(this.emulator_bus);
 
         this["bus"] = this.bus;
         this.bus.register("emulator-stopped", () =>
@@ -477,7 +477,7 @@ export class V86Starter
      *
      * @export
      */
-    public add_listener(event: string, listener)
+    public add_listener(event: string, listener: any)
     {
         this.bus.register(event, listener, this);
     };

@@ -1,4 +1,6 @@
 import { BusConnector } from "../bus";
+import { ticks } from "../hpet";
+
 /**
  * An ethernet-through-websocket adapter, to be used with
  *     https://github.com/benjamincburns/websockproxy
@@ -13,7 +15,7 @@ export class NetworkAdapter
     private send_queue = [];
 
     private reconnect_interval = 10000;
-    private last_connect_attempt = Date.now() - this.reconnect_interval;
+    private last_connect_attempt = ticks() - this.reconnect_interval;
     private send_queue_limit = 64;
 
     constructor(private url: string, private bus: BusConnector)
@@ -80,14 +82,14 @@ export class NetworkAdapter
             }
         }
 
-        var now = Date.now();
+        var now = ticks();
 
         if(this.last_connect_attempt + this.reconnect_interval > now)
         {
             return;
         }
 
-        this.last_connect_attempt = Date.now();
+        this.last_connect_attempt = ticks();
 
         try
         {

@@ -205,7 +205,7 @@ export class VGAScreen
         io.register_read(0x3C0, this, () => this.port3C0_read(), () => this.port3C0_read16());
 
         io.register_read(0x3C1, this, () => this.port3C1_read());
-        io.register_write(0x3C2, this, () => this.port3C2_write);
+        io.register_write(0x3C2, this, (data_byte) => this.port3C2_write(data_byte));
 
         io.register_write_consecutive(0x3C4, this, (data_byte) => this.port3C4_write(data_byte), (data_byte) => this.port3C5_write(data_byte));
 

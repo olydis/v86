@@ -1,6 +1,7 @@
 import { h } from "./lib";
 import { CPU } from "./cpu";
 import { dbg_log, dbg_assert } from "./log";
+import { ticks } from "./hpet";
 
 /**
  * RTC (real time clock) and CMOS
@@ -11,7 +12,7 @@ export class RTC
     private cmos_data = new Uint8Array(128);
 
     // used for cmos entries
-    private rtc_time = Date.now();
+    private rtc_time = ticks();
     private last_update = this.rtc_time;
 
     // used for periodic interrupt
@@ -78,7 +79,7 @@ export class RTC
 
     public timer(time, legacy_mode)
     {
-        time = Date.now(); // XXX
+        time = ticks(); // XXX
         this.rtc_time += time - this.last_update;
         this.last_update = time;
 
@@ -203,7 +204,7 @@ export class RTC
                 this.cmos_b = data_byte;
                 if(this.cmos_b & 0x40)
                 {
-                    this.next_interrupt = Date.now();
+                    this.next_interrupt = ticks();
                 }
 
                 if(this.cmos_b & 0x20) dbg_log("Unimplemented: alarm interrupt", LOG_RTC);

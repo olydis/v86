@@ -6,7 +6,6 @@
  */
 export class ModemAdapter
 {
-    private enabled = true;
     private socket = new WebSocket("ws://localhost:2080");
     private opened = false;
 

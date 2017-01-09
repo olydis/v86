@@ -1,5 +1,3 @@
-import { dbg_assert } from "./log";
-
 export class BusConnector
 {
     private listeners: any;
@@ -66,16 +64,6 @@ export class BusConnector
             var listener = listeners[i];
             listener.fn.call(listener.this_value, value);
         }
-    }
-
-    /**
-     * Send a message, guaranteeing that it is received asynchronously
-     */
-    public send_async(name: string, value: any): void
-    {
-        dbg_assert(arguments.length === 1 || arguments.length === 2);
-
-        setTimeout(() => this.send(name, value), 0);
     }
 }
 

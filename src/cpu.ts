@@ -62,8 +62,6 @@ export class CPU
     public mem16 = new Uint16Array(this.mem8.buffer);
     public mem32s = new Int32Array(this.mem8.buffer);
 
-    private mem_page_infos: any = undefined;
-
     public segment_is_null = new Uint8Array(0);
     public segment_offsets = new Int32Array(0);
     public segment_limits = new Uint32Array(0);
@@ -172,10 +170,10 @@ export class CPU
     public previous_ip = 0;
 
     // managed in io.js
-    public readonly memory_map_read8 = [];
-    public readonly memory_map_write8 = [];
-    public readonly memory_map_read32 = [];
-    public readonly memory_map_write32 = [];
+    public readonly memory_map_read8: ((addr: number) => number)[] = [];
+    public readonly memory_map_write8: ((addr: number, data: number) => void)[] = [];
+    public readonly memory_map_read32: ((addr: number) => number)[] = [];
+    public readonly memory_map_write32: ((addr: number, data: number) => void)[] = [];
 
     private readonly bios: {main: ArrayBuffer, vga: ArrayBuffer} = { main: null, vga: null };
 
@@ -194,9 +192,6 @@ export class CPU
 
     // debug registers
     public dreg = new Int32Array(8);
-
-    // dynamic instruction translator
-    private translator = undefined;
 
     public io: IO = undefined;
     public fpu: FPU = undefined;
@@ -382,15 +377,7 @@ export class CPU
     {
         if(this.in_hlt)
         {
-            //if(false)
-            //{
-            //    var _t = this.hlt_loop();
-            //    var t = 0;
-            //}
-            //else
-            {
-                var t = this.hlt_loop();
-            }
+            var t = this.hlt_loop();
 
             if(this.in_hlt)
             {
@@ -807,7 +794,7 @@ export class CPU
         }
         catch(e)
         {
-            console.warn([this.timestamp_counter, this.previous_ip]);
+            console.warn([true, this.timestamp_counter, this.previous_ip]);
             this.exception_cleanup(e);
         }
     }
@@ -829,6 +816,7 @@ export class CPU
         {
             this.cycle_internal();
         }
+        console.warn([false, this.timestamp_counter, this.previous_ip]);
     }
 
     //var __counts = {};
@@ -2518,7 +2506,6 @@ export class CPU
             throw this.debug.unimpl("#NP handler");
         }
 
-        var tsr_size = this.segment_limits[reg_tr];
         var tsr_offset = this.segment_offsets[reg_tr];
 
         var old_eflags = this.get_eflags();
@@ -3834,7 +3821,6 @@ export class CPU
             high: number,
             can_write = true,
             global,
-            cachable = true,
             allow_user = true;
 
         dbg_assert(addr < 0x80000000);
@@ -4113,13 +4099,6 @@ export class CPU
         dbg_assert(typeof value === "number" && !isNaN(value));
         dbg_assert(value >= -0x80000000 && addr < 0x80000000);
 
-        //if((addr >>> 0) >= 0xDBCF60 && (addr >>> 0) < 0xDBCF90)
-        //{
-        //    dbg_log("write " + h(value >>> 0, 8) + " to " + h(addr >>> 0, 8) + " at " + h(this.instruction_pointer >>> 0));
-        //    dbg_trace();
-        //}
-
-        //dbg_log("Write " + size + " bytes to " + h(addr >>> 0, 8));
         this.debug_read(addr, size, true);
     }
 
@@ -4155,7 +4134,6 @@ export class CPU
     public mmap_write16(addr: number, value: number): void
     {
         var fn = this.memory_map_write8[addr >>> MMAP_BLOCK_BITS];
-        //console.log("write16");
 
         fn(addr, value & 0xFF);
         fn(addr + 1 | 0, value >> 8 & 0xFF);
@@ -4171,7 +4149,6 @@ export class CPU
     public mmap_write32(addr: number, value: number): void
     {
         var aligned_addr = addr >>> MMAP_BLOCK_BITS;
-        //console.log("write32");
 
         this.memory_map_write32[aligned_addr](addr, value);
     }
@@ -4870,8 +4847,8 @@ export class CPU
      * @suppress {newCheckTypes}
      */
 
-    private modrm_table16 = Array(0xC0);
-    private modrm_table32 = Array(0xC0);
+    private modrm_table16: ((cpu: CPU) => number)[] = Array(0xC0);
+    private modrm_table32: ((cpu: CPU) => number)[] = Array(0xC0);
     private sib_table = Array(0x100);
 
     private init_modrm()
@@ -7018,7 +6995,6 @@ export class CPU
 
         if(div_high > 0x100000)
         {
-            var m = 0;
             var i = 32;
             var q = quot;
             while(q > div_high)
@@ -8042,9 +8018,6 @@ else if(typeof importScripts === "function")
 {
     self["CPU"] = CPU;
 }
-
-/** @const */
-var LOG_CACHED_VERBOSE = false;
 
 /** @const */
 var CACHED_STATS = DEBUG && true;

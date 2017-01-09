@@ -1,6 +1,6 @@
 import { h, CircularQueue, pads } from "./lib";
 import { CPU } from "./cpu";
-import { dbg_log, dbg_assert } from "./log";
+import { dbg_log } from "./log";
 
 export class Debug
 {
@@ -105,7 +105,6 @@ export class Debug
         // }
 
         // this.dump_regs_short();
-        // var now = Date.now();
 
         // this.cpu.running = false;
         // this.dump_instructions();
@@ -231,7 +230,6 @@ export class Debug
             r32 = { "eax": reg_eax, "ecx": reg_ecx, "edx": reg_edx, "ebx": reg_ebx,
                     "esp": reg_esp, "ebp": reg_ebp, "esi": reg_esi, "edi": reg_edi },
             r32_names = ["eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi"],
-            s = { "cs": reg_cs, "ds": reg_ds, "es": reg_es, "fs": reg_fs, "gs": reg_gs, "ss": reg_ss },
             line1 = "",
             line2 = "";
 

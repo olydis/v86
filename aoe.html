@@ -10,9 +10,11 @@ body
     padding: 0;
     margin: 0;
 }
-#screen_container
+#screen
 {
-
+    background: black;
+    font-family: monospace;
+    white-space: pre;
 }
 </style>
 
@@ -39,6 +41,7 @@ require.config({
 
 <div>
     <div id="runtime_options" style="display: none">
+        <input type="button" value="RETRY" id="retry">
         <input type="button" value="Pause" id="run">
         <input type="button" value="Reset" id="reset">
         <input type="button" value="Exit" id="exit">

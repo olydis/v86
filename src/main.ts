@@ -91,14 +91,7 @@ export class v86
     {
         var emulator = this;
 
-        if(typeof setImmediate !== "undefined")
-        {
-            this.fast_next_tick = () =>
-            {
-                setImmediate(() => emulator.do_tick());
-            };
-        }
-        else if(typeof window !== "undefined" && typeof postMessage !== "undefined")
+        if(typeof window !== "undefined" && typeof postMessage !== "undefined")
         {
             // setImmediate shim for the browser.
             // TODO: Make this deactivatable, for other applications
@@ -177,7 +170,8 @@ if(typeof performance === "object" && performance.now)
 {
     v86.microtick = () =>
     {
-        return performance.now();
+        return ticks();
+        //return performance.now();
     };
 }
 //else if(typeof process === "object" && process.hrtime)

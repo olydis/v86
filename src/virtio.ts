@@ -30,7 +30,7 @@ export class VirtIO
 
     constructor(
         private readonly cpu: CPU, 
-        private readonly bus: BusConnector, 
+        bus: BusConnector, 
         filesystem: FS)
     {
         // http://ozlabs.org/~rusty/virtio-spec/virtio-0.9.5.pdf

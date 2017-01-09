@@ -1,8 +1,8 @@
 import { V86Starter } from "./src/browser/starter";
-import { dbg_log, dbg_assert } from "./src/log";
+import { dbg_log } from "./src/log";
 import * as v86util from "./src/lib";
 
-function $(id)
+function $(id: string)
 {
     var el = document.getElementById(id);
 
@@ -14,7 +14,7 @@ function $(id)
     return el;
 }
 
-function init_ui(settings, emulator)
+function init_ui(settings: any, emulator: V86Starter)
 {
     $("runtime_options").style.display = "block";
     $("runtime_infos").style.display = "block";
@@ -67,7 +67,7 @@ function init_ui(settings, emulator)
     var last_tick = 0;
     var running_time = 0;
     var last_instr_counter = 0;
-    var interval;
+    var interval: number;
     var os_uses_mouse = false;
 
     function update_info()
@@ -100,11 +100,6 @@ function init_ui(settings, emulator)
         clearInterval(interval);
     });
 
-    var stats_9p = {
-        read: 0,
-        write: 0,
-    };
-
     var stats_storage = {
         read: 0,
         read_sectors: 0,
@@ -134,11 +129,6 @@ function init_ui(settings, emulator)
         $("info_storage_bytes_written").textContent = stats_storage.write + "";
         $("info_storage_sectors_written").textContent = stats_storage.write_sectors + "";
     });
-
-    var stats_net = {
-        bytes_transmitted: 0,
-        bytes_received: 0,
-    };
 
     emulator.add_listener("mouse-enable", (is_enabled) =>
     {
@@ -409,16 +399,13 @@ function start_emulation(settings, done)
 
         "autostart": false,
     });
+    emulator.mouse_set_status(false);
+    //emulator.keyboard_set_status(false);
 
-    if(DEBUG) window["emulator"] = emulator;
+    window["emulator"] = emulator;
 
     emulator.add_listener("emulator-ready", () =>
     {
-        if(DEBUG)
-        {
-            //debug_start(emulator);
-        }
-
         init_ui(settings, emulator);
 
         done && done(emulator);
@@ -426,7 +413,7 @@ function start_emulation(settings, done)
 
     emulator.add_listener("download-progress", (e) =>
     {
-        console.log(e);
+        // console.log(e);
     });
 
     emulator.add_listener("download-error", (e) =>
@@ -443,10 +430,16 @@ export function main()
     //     "url": "images/AOE/v86state_ingame_bench.bin",
     //     //"size": 75726848,
     // };
-    settings.hda = {
-        "url": "images/AOE/windows98x.img",
-        "async": true,
-        //"size": 300 * 1024 * 1024,
+    // settings.hda = {
+    //     "url": "images/AOE/windows98x.img",
+    //     "async": true,
+    //     //"size": 300 * 1024 * 1024,
+    // };
+    settings.fda = {
+        "url": "images/windows101.img",
+        "size": 1474560,
+        // "url": "images/freedos722.img",
+        // "size": 737280,
     };
     settings.memory_size = 64 * 1024 * 1024;
     settings.vga_memory_size = 8 * 1024 * 1024;
@@ -508,3 +501,5 @@ function download(file_or_blob, name)
 }
 
 main();
+
+$("retry").onclick = () => main();
