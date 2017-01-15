@@ -741,11 +741,6 @@ V86Starter.prototype.screen_go_fullscreen = function()
     if(fn)
     {
         fn.call(elem);
-
-        // This is necessary, because otherwise chromium keyboard doesn't work anymore.
-        // Might (but doesn't seem to) break something else
-        var focus_element = document.getElementsByClassName("phone_keyboard")[0];
-        focus_element && focus_element.focus();
     }
 
     //this.lock_mouse(elem);

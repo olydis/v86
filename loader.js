@@ -45,8 +45,8 @@ var loadFinished;
 
         if(!s)
         {
-            if (loadFinished)
-                loadFinished();
+            // if (loadFinished)
+            //     loadFinished();
             return;
         }
 

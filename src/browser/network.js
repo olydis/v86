@@ -23,7 +23,7 @@ function NetworkAdapter(url, bus)
     this.url = url;
 
     this.reconnect_interval = 10000;
-    this.last_connect_attempt = Date.now() - this.reconnect_interval;
+    this.last_connect_attempt = ticks() - this.reconnect_interval;
     this.send_queue_limit = 64;
 
     this.bus.register("net0-send", function(data)
@@ -86,14 +86,14 @@ NetworkAdapter.prototype.connect = function()
         }
     }
 
-    var now = Date.now();
+    var now = ticks();
 
     if(this.last_connect_attempt + this.reconnect_interval > now)
     {
         return;
     }
 
-    this.last_connect_attempt = Date.now();
+    this.last_connect_attempt = ticks();
 
     try
     {

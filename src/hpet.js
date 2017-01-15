@@ -9,6 +9,17 @@ var HPET_ADDR = 0xFED00000,
     HPET_COUNTER_CONFIG_MASK = 1 << 4 | 1 << 5 | 1 << 15,
     HPET_NUM_COUNTERS = 4;
 
+function ticks()
+{
+    return Date.now();
+}
+// var pseudo_time = 1483911185593;
+// function ticks()
+// {
+//     pseudo_time += 0;
+//     return pseudo_time;
+// }
+
 /**
  * HPET - High Precision Event Timer
  * http://wiki.osdev.org/HPET
@@ -21,7 +32,7 @@ function HPET(cpu)
     var me = this,
 
         hpet_enabled = false,
-        hpet_start = Date.now(),
+        hpet_start = ticks(),
 
         hpet_offset_low = 0,
         hpet_offset_high = 0,
@@ -113,7 +124,7 @@ function HPET(cpu)
     {
         if(hpet_enabled)
         {
-            return (Date.now() - hpet_start) * HPET_FREQ_MS + hpet_offset_low | 0;
+            return (ticks() - hpet_start) * HPET_FREQ_MS + hpet_offset_low | 0;
         }
         else
         {
@@ -127,7 +138,7 @@ function HPET(cpu)
         {
             if(hpet_enabled)
             {
-                return (Date.now() - hpet_start) * (HPET_FREQ_MS / 0x100000000) + hpet_offset_high | 0;
+                return (ticks() - hpet_start) * (HPET_FREQ_MS / 0x100000000) + hpet_offset_high | 0;
             }
             else
             {
@@ -211,7 +222,7 @@ function HPET(cpu)
                     if(data & 1)
                     {
                         // counter is enabled now, start counting now
-                        hpet_start = Date.now();
+                        hpet_start = ticks();
                     }
                     else
                     {

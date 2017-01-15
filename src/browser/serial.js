@@ -69,7 +69,7 @@ function SerialAdapter(element, bus)
 
     this.update = function()
     {
-        var now = Date.now();
+        var now = ticks();
         var delta = now - this.last_update;
 
         if(delta < 16)
@@ -78,7 +78,7 @@ function SerialAdapter(element, bus)
             {
                 this.update_timer = setTimeout(() => {
                     this.update_timer = undefined;
-                    var now = Date.now();
+                    var now = ticks();
                     dbg_assert(now - this.last_update >= 16);
                     this.last_update = now;
                     this.render();

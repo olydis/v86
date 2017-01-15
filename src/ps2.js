@@ -216,7 +216,7 @@ PS2.prototype.mouse_send_delta = function(delta_x, delta_y)
 
         if(change_x || change_y)
         {
-            var now = Date.now();
+            var now = ticks();
 
             //if(now - this.last_mouse_packet < 1000 / this.sample_rate)
             //{
@@ -257,7 +257,7 @@ PS2.prototype.send_mouse_packet = function(dx, dy)
         delta_x = dx,
         delta_y = dy;
 
-    this.last_mouse_packet = Date.now();
+    this.last_mouse_packet = ticks();
 
     //if(this.scaling2)
     //{

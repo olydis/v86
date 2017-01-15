@@ -55,7 +55,7 @@ function RTC(cpu)
     this.cmos_data = new Uint8Array(128);
 
     // used for cmos entries
-    this.rtc_time = Date.now();
+    this.rtc_time = ticks();
     this.last_update = this.rtc_time;
 
     // used for periodic interrupt
@@ -120,7 +120,7 @@ RTC.prototype.set_state = function(state)
 
 RTC.prototype.timer = function(time, legacy_mode)
 {
-    time = Date.now(); // XXX
+    time = ticks(); // XXX
     this.rtc_time += time - this.last_update;
     this.last_update = time;
 
@@ -245,7 +245,7 @@ RTC.prototype.cmos_port_write = function(data_byte)
             this.cmos_b = data_byte;
             if(this.cmos_b & 0x40)
             {
-                this.next_interrupt = Date.now();
+                this.next_interrupt = ticks();
             }
 
             if(this.cmos_b & 0x20) dbg_log("Unimplemented: alarm interrupt", LOG_RTC);

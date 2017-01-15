@@ -845,6 +845,7 @@ CPU.prototype.do_many_cycles = function()
     }
     catch(e)
     {
+        //console.warn([true, this.timestamp_counter, this.previous_ip]);
         this.exception_cleanup(e);
     }
 };
@@ -857,6 +858,17 @@ CPU.prototype.do_many_cycles_unsafe = function()
     {
         this.cycle_internal();
     }
+}
+
+CPU.prototype.do_n_cycles_unsafe = function(n)
+{
+    // inner loop:
+    // runs only cycles
+    for(var k = n; k--;)
+    {
+        this.cycle_internal();
+    }
+    console.warn([false, this.timestamp_counter, this.instruction_pointer]);
 }
 
 // Some functions must not be inlined, because then more code is in the
@@ -924,6 +936,7 @@ CPU.prototype.cycle_internal = function()
     //__counts[addr] = __counts[addr] + 1 | 0;
     //this.translate_address_read(this.instruction_pointer + 15|0)
     var opcode = this.read_imm8();
+    //console.warn([this.timestamp_counter, this.instruction_pointer, opcode]);
 
     if(DEBUG)
     {

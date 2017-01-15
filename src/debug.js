@@ -125,7 +125,7 @@ CPU.prototype.debug_init = function()
         }
 
         dump_regs_short();
-        var now = Date.now();
+        var now = ticks();
 
         cpu.running = false;
         dump_instructions();

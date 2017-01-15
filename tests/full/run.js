@@ -339,7 +339,7 @@ function run_test(test, done)
         return !test.expect_graphical_mode || (graphical_test_done && (!test.expect_graphical_size ||  size_test_done));
     }
 
-    var test_start = Date.now();
+    var test_start = ticks();
 
     var timeout_seconds = test.timeout * TIMEOUT_EXTRA_FACTOR;
     var timeout = setTimeout(check_test_done, (timeout_seconds + 1) * 1000);
@@ -356,7 +356,7 @@ function run_test(test, done)
 
         if(check_text_test_done() && check_mouse_test_done() && check_grapical_test_done())
         {
-            var end = Date.now();
+            var end = ticks();
 
             clearTimeout(timeout);
             stopped = true;
@@ -368,7 +368,7 @@ function run_test(test, done)
 
             done();
         }
-        else if(Date.now() >= test_start + timeout_seconds * 1000)
+        else if(ticks() >= test_start + timeout_seconds * 1000)
         {
             clearTimeout(timeout);
             stopped = true;

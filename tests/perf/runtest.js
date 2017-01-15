@@ -46,11 +46,11 @@ function run()
 
 var count = 1e7;
 
-var start = Date.now();
+var start = ticks();
 
 run();
 
-var end = Date.now(),
+var end = ticks(),
     duration = (end - start) / 1e3;
 
 console.log("Finished in " + duration + " seconds, " + (count / duration / 1e6).toFixed(2) + " mips");

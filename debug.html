@@ -7,10 +7,17 @@
 <script src="loader.js"></script>
 <link rel="stylesheet" href="v86.css">
 
+
+<div id="screen_container">
+    <div id="screen"></div>
+    <canvas id="vga"></canvas>
+</div>
+
 <div>
     <div id="boot_options">
         <h4>Debugger</h4>
-        <input type="button" value="Windows 98" id="start_windows98">
+        <input type="button" value="AOE" id="start_aoe">
+        <!--<input type="button" value="Windows 98" id="start_windows98">
         <input type="button" value="Arch Linux" id="start_archlinux">
         <input type="button" value="Oberon" id="start_oberon">
         <input type="button" value="KolibriOS" id="start_kolibrios">
@@ -21,7 +28,7 @@
         <input type="button" value="OpenBSD" id="start_openbsd">
         <input type="button" value="Solar OS" id="start_solos">
         <input type="button" value="Bootchess" id="start_bootchess">
-        <input type="button" value="Test" id="start_test">
+        <input type="button" value="Test" id="start_test">-->
         <br>
 
         <!--
@@ -99,23 +106,21 @@
                  </td>
             </tr>
         </table>
-
-        <br>
         <button id="start_emulation">Start Emulation</button>
-        <!--
-        <br>
-        <div id="setup_error">Error: Video size must be at least over 9000</div>
-        -->
-        <!--
-        <br>
-        <br>
-        Link to this configuration: <a href="" id="config_link">http://copy.sh/v86/?a=b&amp;c=d</a>
-        -->
-        <br>
-        <br>
     </div>
 
     <div id="runtime_options" style="display: none">
+        <input type="button" value="Pause" id="run">
+        <input type="button" value="Save State" id="save_state">
+        <input type="button" value="Load State" id="load_state"> <input type="file" style="display: none" id="load_state_input">
+        <input type="button" value="Enable mouse" id="toggle_mouse">
+    </div>
+
+    <pre style="display: none" id="loading"></pre>
+</div>
+
+<div style="display:none">
+    <div id="runtime_options_hidden" style="display: none">
         <input type="button" value="Step" id="step">
         <input type="button" value="Run until" id="run_until">
         <input type="button" value="Debugger" id="debugger">
@@ -128,7 +133,6 @@
         <input type="button" value="Dump log" id="dump_log">
         <br>
 
-        <input type="button" value="Pause" id="run">
         <input type="button" value="Reset" id="reset">
         <input type="button" value="Exit" id="exit">
         <input type="button" value="Send Ctrl-Alt-Del" id="ctrlaltdel">
@@ -138,10 +142,7 @@
         <input type="button" value="Get hard disk image" id="get_hda_image">
         <input type="button" value="Get second hard disk image" id="get_hdb_image">
         <input type="button" value="Get cdrom image" id="get_cdrom_image">
-        <input type="button" value="Save State" id="save_state">
-        <input type="button" value="Load State" id="load_state"> <input type="file" style="display: none" id="load_state_input">
         <input type="button" value="Memory Dump (raw)" id="memory_dump">
-        <input type="button" value="Disable mouse" id="toggle_mouse">
         <input type="button" value="Lock mouse" id="lock_mouse">
         <input type="button" value="Go fullscreen" id="fullscreen">
         <input type="button" value="Take screenshot (only graphic modes)" id="take_screenshot">
@@ -164,56 +165,47 @@
 
     </div>
 
-    <pre style="margin: 0" id="log_levels"></pre>
+    <div id="log_levels"></div>
     <pre style="margin: 3px 0px 0px 0px" id="debug_infos"></pre>
+    <textarea readonly id="log" style="display:none"></textarea>
+    <textarea spellcheck="false" cols="40" rows="12" id="serial" style="display:none"></textarea>
 
-    <pre style="display: none" id="loading"></pre>
-
-    <br>
-</div>
-
-<div id="screen_container">
-    <div id="screen"></div>
-    <canvas id="vga"></canvas>
-</div>
-
-<input type="text" class="phone_keyboard" style="display: none">
-
-<div id="runtime_infos" style="display: none">
-    Running: <span id="running_time">0s</span> <br>
-    Speed: <span id="speed">0</span>kIPS<br>
-    Avg speed: <span id="avg_speed">0</span>kIPS<br>
-    <br>
-    <div id="info_storage" style="display: none">
-        <b>IDE device (HDA or CDROM)</b><br>
-        Sectors read: <span id="info_storage_sectors_read">0</span><br>
-        Bytes read: <span id="info_storage_bytes_read">0</span><br>
-        Sectors written: <span id="info_storage_sectors_written">0</span><br>
-        Bytes written: <span id="info_storage_bytes_written">0</span><br>
-        Status: <span id="info_storage_status"></span><br>
+    <div id="runtime_infos" style="display: none">
+        Running: <span id="running_time">0s</span> <br>
+        Speed: <span id="speed">0</span>kIPS<br>
+        Avg speed: <span id="avg_speed">0</span>kIPS<br>
         <br>
-    </div>
-    <div id="info_filesystem" style="display: none">
-        <b>9p Filesystem</b><br>
-        Bytes read: <span id="info_filesystem_bytes_read">0</span><br>
-        Bytes written: <span id="info_filesystem_bytes_written">0</span><br>
-        Last file: <span id="info_filesystem_last_file" style="word-wrap: break-word"></span><br>
-        Status: <span id="info_filesystem_status"></span><br>
+        <div id="info_storage" style="display: none">
+            <b>IDE device (HDA or CDROM)</b><br>
+            Sectors read: <span id="info_storage_sectors_read">0</span><br>
+            Bytes read: <span id="info_storage_bytes_read">0</span><br>
+            Sectors written: <span id="info_storage_sectors_written">0</span><br>
+            Bytes written: <span id="info_storage_bytes_written">0</span><br>
+            Status: <span id="info_storage_status"></span><br>
+            <br>
+        </div>
+        <div id="info_filesystem" style="display: none">
+            <b>9p Filesystem</b><br>
+            Bytes read: <span id="info_filesystem_bytes_read">0</span><br>
+            Bytes written: <span id="info_filesystem_bytes_written">0</span><br>
+            Last file: <span id="info_filesystem_last_file" style="word-wrap: break-word"></span><br>
+            Status: <span id="info_filesystem_status"></span><br>
+            <br>
+        </div>
+        <div id="info_network" style="display: none">
+            <b>Network</b><br>
+            Bytes received: <span id="info_network_bytes_received">0</span><br>
+            Bytes transmitted: <span id="info_network_bytes_transmitted">0</span><br>
+            <br>
+        </div>
+        <b>VGA</b><br>
+        Mode: <span id="info_vga_mode"></span><br>
+        Resolution: <span id="info_res">-</span><br>
+        BPP: <span id="info_bpp">-</span><br>
         <br>
+        Mouse: <span id="info_mouse_enabled">No</span><br>
+        <!-- Keyboard: <span id="info_keyboard_enabled">-</span><br> -->
     </div>
-    <div id="info_network" style="display: none">
-        <b>Network</b><br>
-        Bytes received: <span id="info_network_bytes_received">0</span><br>
-        Bytes transmitted: <span id="info_network_bytes_transmitted">0</span><br>
-        <br>
-    </div>
-    <b>VGA</b><br>
-    Mode: <span id="info_vga_mode"></span><br>
-    Resolution: <span id="info_res">-</span><br>
-    BPP: <span id="info_bpp">-</span><br>
-    <br>
-    Mouse: <span id="info_mouse_enabled">No</span><br>
-    <!-- Keyboard: <span id="info_keyboard_enabled">-</span><br> -->
 </div>
 
 <div id="filesystem_panel" style="display: none">
@@ -227,14 +219,7 @@
         <input type="text" id="filesystem_get_file" placeholder="Absolute path">
     </label>
 </div>
-
-<br style="clear:both"><br>
-
-<textarea readonly id="log" style="display:none"></textarea>
-
-<textarea spellcheck="false" cols="40" rows="12" id="serial" style="display:none">
-</textarea>
-
+<!--
 <hr>
-<a href="./">To fast version</a>
+<a href="./">To fast version</a>-->
 

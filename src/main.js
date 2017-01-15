@@ -234,7 +234,7 @@ if(typeof performance === "object" && performance.now)
 {
     v86.microtick = function()
     {
-        return performance.now();
+        return ticks();
     };
 }
 //else if(typeof process === "object" && process.hrtime)

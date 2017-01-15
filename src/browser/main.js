@@ -337,6 +337,21 @@
                 },
             },
             {
+                id: "aoe",
+                memory_size: 64 * 1024 * 1024,
+                hda: {
+                    "url": HOST + "images/AOE/windows98x.img",
+                    "async": true,
+                    //"size": 300 * 1024 * 1024,
+                },
+                name: "Windows 98",
+                boot_order: 0x132,
+                state: {
+                    "url": HOST + "images/AOE/v86state_ingame_bench.bin",
+                    //"size": 42151380,
+                },
+            },
+            {
                 id: "windows95",
                 memory_size: 64 * 1024 * 1024,
                 hda: {
@@ -1112,6 +1127,8 @@
 
             "autostart": true,
         });
+        emulator.mouse_set_status(false);
+        emulator.keyboard_set_status(false);
 
         if(DEBUG) window["emulator"] = emulator;
 
@@ -1151,7 +1168,6 @@
         $("loading").style.display = "none";
         $("runtime_options").style.display = "block";
         $("runtime_infos").style.display = "block";
-        document.getElementsByClassName("phone_keyboard")[0].style.display = "block";
 
         if(settings.filesystem)
         {
@@ -1191,7 +1207,7 @@
             $("lock_mouse").blur();
         };
 
-        var mouse_is_enabled = true;
+        var mouse_is_enabled = false;
 
         $("toggle_mouse").onclick = function()
         {
@@ -1222,7 +1238,9 @@
             running_time += delta_time;
             last_tick = now;
 
-            $("speed").textContent = last_ips / delta_time | 0;
+            var kips = last_ips / delta_time | 0;
+            document.title = kips;
+            $("speed").textContent = kips;
             $("avg_speed").textContent = instruction_counter / running_time | 0;
             $("running_time").textContent = time2str(running_time / 1000 | 0);
         }
@@ -1544,20 +1562,6 @@
             {
                 emulator.lock_mouse();
                 $("lock_mouse").blur();
-            }
-            else
-            {
-                // allow text selection
-                if(window.getSelection().isCollapsed)
-                {
-                    let phone_keyboard = document.getElementsByClassName("phone_keyboard")[0];
-
-                    // stop mobile browser from scrolling into view when the keyboard is shown
-                    phone_keyboard.style.top = document.body.scrollTop + 100 + "px";
-                    phone_keyboard.style.left = document.body.scrollLeft + 100 + "px";
-
-                    phone_keyboard.focus();
-                }
             }
         };
 

@@ -58,14 +58,6 @@ body {
 a {
     color: wheat;
 }
-.phone_keyboard {
-    width: 0;
-    height: 0;
-    resize: none;
-    border: 0;
-    padding: 0;
-    position: absolute;
-}
 h4 {
     margin: 0px 0px 20px 0px;
 }
