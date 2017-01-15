@@ -13,6 +13,7 @@ export class Debug
     private all_ops = [];
 
     private trace_all = true;
+    private seabios_debug: string;
 
     constructor(private cpu: CPU)
     {
@@ -45,26 +46,26 @@ export class Debug
         // used for debugging
         this.ops = new CircularQueue(200000);
 
-        if(this.cpu.io)
-        {
-            // write seabios debug output to console
-            var seabios_debug = "";
-
-            this.cpu.io.register_write(0x402, this, (data_byte) => handle(data_byte)); // seabios
-            this.cpu.io.register_write(0x500, this, (data_byte) => handle(data_byte)); // vgabios
-        }
-
-        function handle(out_byte)
+        var handle = (out_byte) =>
         {
             if(out_byte === 10)
             {
-                dbg_log(seabios_debug, LOG_BIOS);
-                seabios_debug = "";
+                dbg_log(this.seabios_debug, LOG_BIOS);
+                this.seabios_debug = "";
             }
             else
             {
-                seabios_debug += String.fromCharCode(out_byte);
+                this.seabios_debug += String.fromCharCode(out_byte);
             }
+        };
+
+        if(this.cpu.io)
+        {
+            // write seabios debug output to console
+            this.seabios_debug = "";
+
+            this.cpu.io.register_write(0x402, this, (data_byte) => handle(data_byte)); // seabios
+            this.cpu.io.register_write(0x500, this, (data_byte) => handle(data_byte)); // vgabios
         }
     }
 

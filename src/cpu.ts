@@ -57,6 +57,7 @@ export class CPU
 
     // Note: Currently unused (degrades performance and not required by any OS that we support)
     private a20_enabled = true;
+    private a20_byte = 0;
 
     public mem8 = new Uint8Array(0);
     public mem16 = new Uint16Array(this.mem8.buffer);
@@ -548,8 +549,6 @@ export class CPU
 
         this.load_bios();
 
-        var a20_byte = 0;
-
         io.register_read(0xB3, this, () =>
         {
             // seabios smm_relocate_and_restore
@@ -559,12 +558,12 @@ export class CPU
 
         io.register_read(0x92, this, () =>
         {
-            return a20_byte;
+            return this.a20_byte;
         });
 
         io.register_write(0x92, this, (out_byte) =>
         {
-            a20_byte = out_byte;
+            this.a20_byte = out_byte;
         });
 
         if(DEBUG)
@@ -1654,7 +1653,7 @@ export class CPU
         }
         else
         {
-            // call 4 byte cs:ip interrupt vector from ivt at cpu.memory 0
+            // call 4 byte cs:ip interrupt vector from ivt at this.memory 0
 
             var index = interrupt_nr << 2;
             var new_ip = this.read16(index);
@@ -4853,206 +4852,206 @@ export class CPU
 
     private init_modrm()
     {
-        this.modrm_table16[0x00 | 0] = (cpu) =>
+        this.modrm_table16[0x00 | 0] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_bx] + cpu.reg16[reg_si]) & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_bx] + this.reg16[reg_si]) & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x40 | 0] = (cpu) =>
+        this.modrm_table16[0x40 | 0] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_bx] + cpu.reg16[reg_si]) + cpu.read_disp8s() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_bx] + this.reg16[reg_si]) + this.read_disp8s() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x80 | 0] = (cpu) =>
+        this.modrm_table16[0x80 | 0] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_bx] + cpu.reg16[reg_si]) + cpu.read_disp16() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_bx] + this.reg16[reg_si]) + this.read_disp16() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x00 | 1] = (cpu) =>
+        this.modrm_table16[0x00 | 1] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_bx] + cpu.reg16[reg_di]) & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_bx] + this.reg16[reg_di]) & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x40 | 1] = (cpu) =>
+        this.modrm_table16[0x40 | 1] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_bx] + cpu.reg16[reg_di]) + cpu.read_disp8s() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_bx] + this.reg16[reg_di]) + this.read_disp8s() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x80 | 1] = (cpu) =>
+        this.modrm_table16[0x80 | 1] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_bx] + cpu.reg16[reg_di]) + cpu.read_disp16() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_bx] + this.reg16[reg_di]) + this.read_disp16() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x00 | 2] = (cpu) =>
+        this.modrm_table16[0x00 | 2] = () =>
         {
-            return cpu.get_seg_prefix_ss() + ((cpu.reg16[reg_bp] + cpu.reg16[reg_si]) & 0xFFFF) | 0;
+            return this.get_seg_prefix_ss() + ((this.reg16[reg_bp] + this.reg16[reg_si]) & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x40 | 2] = (cpu) =>
+        this.modrm_table16[0x40 | 2] = () =>
         {
-            return cpu.get_seg_prefix_ss() + ((cpu.reg16[reg_bp] + cpu.reg16[reg_si]) + cpu.read_disp8s() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ss() + ((this.reg16[reg_bp] + this.reg16[reg_si]) + this.read_disp8s() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x80 | 2] = (cpu) =>
+        this.modrm_table16[0x80 | 2] = () =>
         {
-            return cpu.get_seg_prefix_ss() + ((cpu.reg16[reg_bp] + cpu.reg16[reg_si]) + cpu.read_disp16() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ss() + ((this.reg16[reg_bp] + this.reg16[reg_si]) + this.read_disp16() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x00 | 3] = (cpu) =>
+        this.modrm_table16[0x00 | 3] = () =>
         {
-            return cpu.get_seg_prefix_ss() + ((cpu.reg16[reg_bp] + cpu.reg16[reg_di]) & 0xFFFF) | 0;
+            return this.get_seg_prefix_ss() + ((this.reg16[reg_bp] + this.reg16[reg_di]) & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x40 | 3] = (cpu) =>
+        this.modrm_table16[0x40 | 3] = () =>
         {
-            return cpu.get_seg_prefix_ss() + ((cpu.reg16[reg_bp] + cpu.reg16[reg_di]) + cpu.read_disp8s() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ss() + ((this.reg16[reg_bp] + this.reg16[reg_di]) + this.read_disp8s() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x80 | 3] = (cpu) =>
+        this.modrm_table16[0x80 | 3] = () =>
         {
-            return cpu.get_seg_prefix_ss() + ((cpu.reg16[reg_bp] + cpu.reg16[reg_di]) + cpu.read_disp16() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ss() + ((this.reg16[reg_bp] + this.reg16[reg_di]) + this.read_disp16() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x00 | 4] = (cpu) =>
+        this.modrm_table16[0x00 | 4] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_si]) & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_si]) & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x40 | 4] = (cpu) =>
+        this.modrm_table16[0x40 | 4] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_si]) + cpu.read_disp8s() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_si]) + this.read_disp8s() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x80 | 4] = (cpu) =>
+        this.modrm_table16[0x80 | 4] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_si]) + cpu.read_disp16() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_si]) + this.read_disp16() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x00 | 5] = (cpu) =>
+        this.modrm_table16[0x00 | 5] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_di]) & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_di]) & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x40 | 5] = (cpu) =>
+        this.modrm_table16[0x40 | 5] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_di]) + cpu.read_disp8s() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_di]) + this.read_disp8s() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x80 | 5] = (cpu) =>
+        this.modrm_table16[0x80 | 5] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_di]) + cpu.read_disp16() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_di]) + this.read_disp16() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x00 | 6] = (cpu) =>
+        this.modrm_table16[0x00 | 6] = () =>
         {
-            return cpu.get_seg_prefix_ss() + ((cpu.reg16[reg_bp]) & 0xFFFF) | 0;
+            return this.get_seg_prefix_ss() + ((this.reg16[reg_bp]) & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x40 | 6] = (cpu) =>
+        this.modrm_table16[0x40 | 6] = () =>
         {
-            return cpu.get_seg_prefix_ss() + ((cpu.reg16[reg_bp]) + cpu.read_disp8s() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ss() + ((this.reg16[reg_bp]) + this.read_disp8s() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x80 | 6] = (cpu) =>
+        this.modrm_table16[0x80 | 6] = () =>
         {
-            return cpu.get_seg_prefix_ss() + ((cpu.reg16[reg_bp]) + cpu.read_disp16() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ss() + ((this.reg16[reg_bp]) + this.read_disp16() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x00 | 7] = (cpu) =>
+        this.modrm_table16[0x00 | 7] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_bx]) & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_bx]) & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x40 | 7] = (cpu) =>
+        this.modrm_table16[0x40 | 7] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_bx]) + cpu.read_disp8s() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_bx]) + this.read_disp8s() & 0xFFFF) | 0;
         }
-        this.modrm_table16[0x80 | 7] = (cpu) =>
+        this.modrm_table16[0x80 | 7] = () =>
         {
-            return cpu.get_seg_prefix_ds() + ((cpu.reg16[reg_bx]) + cpu.read_disp16() & 0xFFFF) | 0;
+            return this.get_seg_prefix_ds() + ((this.reg16[reg_bx]) + this.read_disp16() & 0xFFFF) | 0;
         }
-        this.modrm_table32[0x00 | 0] = (cpu) =>
+        this.modrm_table32[0x00 | 0] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax]) | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_eax]) | 0;
         }
-        this.modrm_table32[0x40 | 0] = (cpu) =>
+        this.modrm_table32[0x40 | 0] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax]) + cpu.read_disp8s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_eax]) + this.read_disp8s() | 0;
         }
-        this.modrm_table32[0x80 | 0] = (cpu) =>
+        this.modrm_table32[0x80 | 0] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax]) + cpu.read_disp32s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_eax]) + this.read_disp32s() | 0;
         }
-        this.modrm_table32[0x00 | 1] = (cpu) =>
+        this.modrm_table32[0x00 | 1] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx]) | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_ecx]) | 0;
         }
-        this.modrm_table32[0x40 | 1] = (cpu) =>
+        this.modrm_table32[0x40 | 1] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx]) + cpu.read_disp8s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_ecx]) + this.read_disp8s() | 0;
         }
-        this.modrm_table32[0x80 | 1] = (cpu) =>
+        this.modrm_table32[0x80 | 1] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx]) + cpu.read_disp32s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_ecx]) + this.read_disp32s() | 0;
         }
-        this.modrm_table32[0x00 | 2] = (cpu) =>
+        this.modrm_table32[0x00 | 2] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx]) | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_edx]) | 0;
         }
-        this.modrm_table32[0x40 | 2] = (cpu) =>
+        this.modrm_table32[0x40 | 2] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx]) + cpu.read_disp8s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_edx]) + this.read_disp8s() | 0;
         }
-        this.modrm_table32[0x80 | 2] = (cpu) =>
+        this.modrm_table32[0x80 | 2] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx]) + cpu.read_disp32s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_edx]) + this.read_disp32s() | 0;
         }
-        this.modrm_table32[0x00 | 3] = (cpu) =>
+        this.modrm_table32[0x00 | 3] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx]) | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_ebx]) | 0;
         }
-        this.modrm_table32[0x40 | 3] = (cpu) =>
+        this.modrm_table32[0x40 | 3] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx]) + cpu.read_disp8s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_ebx]) + this.read_disp8s() | 0;
         }
-        this.modrm_table32[0x80 | 3] = (cpu) =>
+        this.modrm_table32[0x80 | 3] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx]) + cpu.read_disp32s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_ebx]) + this.read_disp32s() | 0;
         }
-        this.modrm_table32[0x00 | 5] = (cpu) =>
+        this.modrm_table32[0x00 | 5] = () =>
         {
-            return(cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp]) | 0;
+            return(this.get_seg_prefix_ss() + this.reg32s[reg_ebp]) | 0;
         }
-        this.modrm_table32[0x40 | 5] = (cpu) =>
+        this.modrm_table32[0x40 | 5] = () =>
         {
-            return(cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp]) + cpu.read_disp8s() | 0;
+            return(this.get_seg_prefix_ss() + this.reg32s[reg_ebp]) + this.read_disp8s() | 0;
         }
-        this.modrm_table32[0x80 | 5] = (cpu) =>
+        this.modrm_table32[0x80 | 5] = () =>
         {
-            return(cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp]) + cpu.read_disp32s() | 0;
+            return(this.get_seg_prefix_ss() + this.reg32s[reg_ebp]) + this.read_disp32s() | 0;
         }
-        this.modrm_table32[0x00 | 6] = (cpu) =>
+        this.modrm_table32[0x00 | 6] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi]) | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_esi]) | 0;
         }
-        this.modrm_table32[0x40 | 6] = (cpu) =>
+        this.modrm_table32[0x40 | 6] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi]) + cpu.read_disp8s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_esi]) + this.read_disp8s() | 0;
         }
-        this.modrm_table32[0x80 | 6] = (cpu) =>
+        this.modrm_table32[0x80 | 6] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi]) + cpu.read_disp32s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_esi]) + this.read_disp32s() | 0;
         }
-        this.modrm_table32[0x00 | 7] = (cpu) =>
+        this.modrm_table32[0x00 | 7] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi]) | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_edi]) | 0;
         }
-        this.modrm_table32[0x40 | 7] = (cpu) =>
+        this.modrm_table32[0x40 | 7] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi]) + cpu.read_disp8s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_edi]) + this.read_disp8s() | 0;
         }
-        this.modrm_table32[0x80 | 7] = (cpu) =>
+        this.modrm_table32[0x80 | 7] = () =>
         {
-            return(cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi]) + cpu.read_disp32s() | 0;
+            return(this.get_seg_prefix_ds() + this.reg32s[reg_edi]) + this.read_disp32s() | 0;
         }
         // special cases
-        this.modrm_table16[0x00 | 6] = (cpu) =>
+        this.modrm_table16[0x00 | 6] = () =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.read_disp16() | 0;
+            return this.get_seg_prefix_ds() + this.read_disp16() | 0;
         }
-        this.modrm_table32[0x00 | 5] = (cpu) =>
+        this.modrm_table32[0x00 | 5] = () =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.read_disp32s() | 0;
+            return this.get_seg_prefix_ds() + this.read_disp32s() | 0;
         }
-        this.modrm_table32[0x00 | 4] = (cpu) =>
+        this.modrm_table32[0x00 | 4] = () =>
         {
-            return cpu.sib_resolve(false) | 0;
+            return this.sib_resolve(false) | 0;
         }
-        this.modrm_table32[0x40 | 4] = (cpu) =>
+        this.modrm_table32[0x40 | 4] = () =>
         {
-            return cpu.sib_resolve(true) + cpu.read_disp8s() | 0;
+            return this.sib_resolve(true) + this.read_disp8s() | 0;
         }
-        this.modrm_table32[0x80 | 4] = (cpu) =>
+        this.modrm_table32[0x80 | 4] = () =>
         {
-            return cpu.sib_resolve(true) + cpu.read_disp32s() | 0;
+            return this.sib_resolve(true) + this.read_disp32s() | 0;
         }
         for(var low = 0; low < 8; low++)
         {
@@ -5069,1027 +5068,1027 @@ export class CPU
 
         this.sib_table[0x00 | 0 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_eax]) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x00 | 0 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_eax]) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x00 | 0 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_eax]) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x00 | 0 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_eax]) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x00 | 0 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax]) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_eax]) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x00 | 0 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax]) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_eax]) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x00 | 0 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_eax]) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x00 | 0 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_eax]) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x40 | 0 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_eax] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x40 | 0 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_eax] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x40 | 0 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_eax] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x40 | 0 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_eax] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x40 | 0 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 1) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_eax] << 1) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x40 | 0 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 1) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_eax] << 1) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x40 | 0 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_eax] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x40 | 0 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_eax] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x80 | 0 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_eax] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x80 | 0 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_eax] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x80 | 0 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_eax] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x80 | 0 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_eax] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x80 | 0 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 2) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_eax] << 2) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x80 | 0 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 2) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_eax] << 2) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x80 | 0 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_eax] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x80 | 0 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_eax] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0xC0 | 0 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_eax] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0xC0 | 0 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_eax] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0xC0 | 0 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_eax] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0xC0 | 0 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_eax] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0xC0 | 0 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 3) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_eax] << 3) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0xC0 | 0 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 3) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_eax] << 3) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0xC0 | 0 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_eax] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0xC0 | 0 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_eax] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_eax] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x00 | 1 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ecx]) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x00 | 1 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ecx]) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x00 | 1 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ecx]) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x00 | 1 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ecx]) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x00 | 1 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx]) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ecx]) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x00 | 1 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx]) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ecx]) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x00 | 1 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ecx]) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x00 | 1 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ecx]) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x40 | 1 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ecx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x40 | 1 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ecx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x40 | 1 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ecx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x40 | 1 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ecx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x40 | 1 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 1) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ecx] << 1) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x40 | 1 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 1) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ecx] << 1) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x40 | 1 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ecx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x40 | 1 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ecx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x80 | 1 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ecx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x80 | 1 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ecx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x80 | 1 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ecx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x80 | 1 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ecx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x80 | 1 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 2) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ecx] << 2) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x80 | 1 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 2) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ecx] << 2) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x80 | 1 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ecx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x80 | 1 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ecx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0xC0 | 1 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ecx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0xC0 | 1 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ecx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0xC0 | 1 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ecx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0xC0 | 1 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ecx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0xC0 | 1 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 3) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ecx] << 3) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0xC0 | 1 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 3) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ecx] << 3) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0xC0 | 1 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ecx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0xC0 | 1 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ecx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ecx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x00 | 2 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_edx]) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x00 | 2 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_edx]) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x00 | 2 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_edx]) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x00 | 2 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_edx]) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x00 | 2 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx]) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_edx]) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x00 | 2 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx]) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_edx]) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x00 | 2 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_edx]) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x00 | 2 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_edx]) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x40 | 2 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_edx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x40 | 2 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_edx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x40 | 2 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_edx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x40 | 2 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_edx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x40 | 2 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 1) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_edx] << 1) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x40 | 2 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 1) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_edx] << 1) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x40 | 2 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_edx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x40 | 2 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_edx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x80 | 2 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_edx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x80 | 2 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_edx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x80 | 2 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_edx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x80 | 2 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_edx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x80 | 2 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 2) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_edx] << 2) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x80 | 2 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 2) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_edx] << 2) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x80 | 2 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_edx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x80 | 2 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_edx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0xC0 | 2 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_edx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0xC0 | 2 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_edx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0xC0 | 2 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_edx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0xC0 | 2 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_edx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0xC0 | 2 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 3) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_edx] << 3) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0xC0 | 2 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 3) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_edx] << 3) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0xC0 | 2 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_edx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0xC0 | 2 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_edx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x00 | 3 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ebx]) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x00 | 3 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ebx]) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x00 | 3 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ebx]) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x00 | 3 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ebx]) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x00 | 3 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx]) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ebx]) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x00 | 3 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx]) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ebx]) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x00 | 3 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ebx]) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x00 | 3 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ebx]) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x40 | 3 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ebx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x40 | 3 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ebx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x40 | 3 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ebx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x40 | 3 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ebx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x40 | 3 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 1) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ebx] << 1) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x40 | 3 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 1) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ebx] << 1) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x40 | 3 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ebx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x40 | 3 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ebx] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x80 | 3 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ebx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x80 | 3 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ebx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x80 | 3 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ebx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x80 | 3 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ebx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x80 | 3 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 2) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ebx] << 2) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x80 | 3 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 2) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ebx] << 2) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x80 | 3 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ebx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x80 | 3 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ebx] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0xC0 | 3 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ebx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0xC0 | 3 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ebx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0xC0 | 3 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ebx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0xC0 | 3 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ebx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0xC0 | 3 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 3) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ebx] << 3) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0xC0 | 3 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 3) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ebx] << 3) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0xC0 | 3 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ebx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0xC0 | 3 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebx] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ebx] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x00 | 4 << 3 | 0] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x00 | 4 << 3 | 1] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x00 | 4 << 3 | 2] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x00 | 4 << 3 | 3] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x00 | 4 << 3 | 4] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x00 | 4 << 3 | 5] = (cpu, mod) =>
         {
-            return (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x00 | 4 << 3 | 6] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x00 | 4 << 3 | 7] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x40 | 4 << 3 | 0] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x40 | 4 << 3 | 1] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x40 | 4 << 3 | 2] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x40 | 4 << 3 | 3] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x40 | 4 << 3 | 4] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x40 | 4 << 3 | 5] = (cpu, mod) =>
         {
-            return (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x40 | 4 << 3 | 6] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x40 | 4 << 3 | 7] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x80 | 4 << 3 | 0] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x80 | 4 << 3 | 1] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x80 | 4 << 3 | 2] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x80 | 4 << 3 | 3] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x80 | 4 << 3 | 4] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x80 | 4 << 3 | 5] = (cpu, mod) =>
         {
-            return (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x80 | 4 << 3 | 6] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x80 | 4 << 3 | 7] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0xC0 | 4 << 3 | 0] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0xC0 | 4 << 3 | 1] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0xC0 | 4 << 3 | 2] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0xC0 | 4 << 3 | 3] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0xC0 | 4 << 3 | 4] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0xC0 | 4 << 3 | 5] = (cpu, mod) =>
         {
-            return (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0xC0 | 4 << 3 | 6] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0xC0 | 4 << 3 | 7] = (cpu, mod) =>
         {
-            return cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x00 | 5 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ebp]) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x00 | 5 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ebp]) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x00 | 5 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ebp]) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x00 | 5 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ebp]) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x00 | 5 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp]) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ebp]) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x00 | 5 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp]) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ebp]) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x00 | 5 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ebp]) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x00 | 5 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ebp]) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x40 | 5 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ebp] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x40 | 5 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ebp] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x40 | 5 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ebp] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x40 | 5 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ebp] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x40 | 5 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 1) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ebp] << 1) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x40 | 5 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 1) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ebp] << 1) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x40 | 5 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ebp] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x40 | 5 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ebp] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x80 | 5 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ebp] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x80 | 5 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ebp] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x80 | 5 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ebp] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x80 | 5 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ebp] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x80 | 5 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 2) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ebp] << 2) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x80 | 5 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 2) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ebp] << 2) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x80 | 5 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ebp] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x80 | 5 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ebp] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0xC0 | 5 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_ebp] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0xC0 | 5 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_ebp] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0xC0 | 5 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_ebp] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0xC0 | 5 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_ebp] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0xC0 | 5 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 3) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_ebp] << 3) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0xC0 | 5 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 3) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_ebp] << 3) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0xC0 | 5 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_ebp] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0xC0 | 5 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_ebp] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_ebp] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x00 | 6 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_esi]) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x00 | 6 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_esi]) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x00 | 6 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_esi]) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x00 | 6 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_esi]) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x00 | 6 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi]) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_esi]) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x00 | 6 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi]) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_esi]) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x00 | 6 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_esi]) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x00 | 6 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_esi]) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x40 | 6 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_esi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x40 | 6 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_esi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x40 | 6 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_esi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x40 | 6 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_esi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x40 | 6 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 1) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_esi] << 1) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x40 | 6 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 1) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_esi] << 1) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x40 | 6 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_esi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x40 | 6 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_esi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x80 | 6 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_esi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x80 | 6 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_esi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x80 | 6 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_esi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x80 | 6 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_esi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x80 | 6 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 2) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_esi] << 2) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x80 | 6 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 2) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_esi] << 2) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x80 | 6 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_esi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x80 | 6 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_esi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0xC0 | 6 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_esi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0xC0 | 6 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_esi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0xC0 | 6 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_esi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0xC0 | 6 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_esi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0xC0 | 6 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 3) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_esi] << 3) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0xC0 | 6 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 3) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_esi] << 3) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0xC0 | 6 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_esi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0xC0 | 6 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_esi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_esi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x00 | 7 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_edi]) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x00 | 7 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_edi]) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x00 | 7 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_edi]) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x00 | 7 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_edi]) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x00 | 7 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi]) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_edi]) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x00 | 7 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi]) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_edi]) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x00 | 7 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_edi]) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x00 | 7 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi]) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_edi]) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x40 | 7 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_edi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x40 | 7 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_edi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x40 | 7 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_edi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x40 | 7 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_edi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x40 | 7 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 1) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_edi] << 1) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x40 | 7 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 1) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_edi] << 1) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x40 | 7 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_edi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x40 | 7 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 1) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_edi] << 1) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0x80 | 7 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_edi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0x80 | 7 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_edi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0x80 | 7 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_edi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0x80 | 7 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_edi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0x80 | 7 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 2) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_edi] << 2) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0x80 | 7 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 2) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_edi] << 2) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0x80 | 7 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_edi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0x80 | 7 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 2) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_edi] << 2) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
         this.sib_table[0xC0 | 7 << 3 | 0] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_eax] | 0;
+            return(this.reg32s[reg_edi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_eax] | 0;
         }
         this.sib_table[0xC0 | 7 << 3 | 1] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ecx] | 0;
+            return(this.reg32s[reg_edi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ecx] | 0;
         }
         this.sib_table[0xC0 | 7 << 3 | 2] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edx] | 0;
+            return(this.reg32s[reg_edi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edx] | 0;
         }
         this.sib_table[0xC0 | 7 << 3 | 3] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_ebx] | 0;
+            return(this.reg32s[reg_edi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_ebx] | 0;
         }
         this.sib_table[0xC0 | 7 << 3 | 4] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 3) + cpu.get_seg_prefix_ss() + cpu.reg32s[reg_esp] | 0;
+            return(this.reg32s[reg_edi] << 3) + this.get_seg_prefix_ss() + this.reg32s[reg_esp] | 0;
         }
         this.sib_table[0xC0 | 7 << 3 | 5] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 3) + (mod ? cpu.get_seg_prefix_ss() + cpu.reg32s[reg_ebp] : cpu.get_seg_prefix_ds() + cpu.read_disp32s()) | 0;
+            return(this.reg32s[reg_edi] << 3) + (mod ? this.get_seg_prefix_ss() + this.reg32s[reg_ebp] : this.get_seg_prefix_ds() + this.read_disp32s()) | 0;
         }
         this.sib_table[0xC0 | 7 << 3 | 6] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_esi] | 0;
+            return(this.reg32s[reg_edi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_esi] | 0;
         }
         this.sib_table[0xC0 | 7 << 3 | 7] = (cpu, mod) =>
         {
-            return(cpu.reg32s[reg_edi] << 3) + cpu.get_seg_prefix_ds() + cpu.reg32s[reg_edi] | 0;
+            return(this.reg32s[reg_edi] << 3) + this.get_seg_prefix_ds() + this.reg32s[reg_edi] | 0;
         }
     }
 
@@ -6249,61 +6248,61 @@ export class CPU
     public movsb()
     {
         var cpu = this;
-        var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
-        var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
-        var size = cpu.flags & flag_direction ? -1 : 1;
+        var src = this.get_seg_prefix(reg_ds) + this.get_reg_asize(reg_esi) | 0;
+        var dest = this.get_seg(reg_es) + this.get_reg_asize(reg_edi) | 0;
+        var size = this.flags & flag_direction ? -1 : 1;
 
-        if(cpu.prefixes & PREFIX_MASK_REP)
+        if(this.prefixes & PREFIX_MASK_REP)
         {
-            var count = cpu.get_reg_asize(reg_ecx) >>> 0;
+            var count = this.get_reg_asize(reg_ecx) >>> 0;
             if(count === 0) return;
             var cont = false;
             var start_count = count;
             var cycle_counter = StringX.MAX_COUNT_PER_CYCLE;
-            var phys_src = cpu.translate_address_read(src);
-            var phys_dest = cpu.translate_address_write(dest);
-            if(cpu.paging)
+            var phys_src = this.translate_address_read(src);
+            var phys_dest = this.translate_address_write(dest);
+            if(this.paging)
             {
                 cycle_counter = StringX.string_get_cycle_count2(size, src, dest);
             }
             do
             {
-                cpu.write8(phys_dest, cpu.read8(phys_src));
+                this.write8(phys_dest, this.read8(phys_src));
                 phys_dest += size;
                 phys_src += size;
                 cont = --count !== 0;
             }
             while(cont && cycle_counter--);
             var diff = size * (start_count - count) | 0;
-            cpu.add_reg_asize(reg_edi, diff);
-            cpu.add_reg_asize(reg_esi, diff);
-            cpu.set_ecx_asize(count);
-            cpu.timestamp_counter += start_count - count;
+            this.add_reg_asize(reg_edi, diff);
+            this.add_reg_asize(reg_esi, diff);
+            this.set_ecx_asize(count);
+            this.timestamp_counter += start_count - count;
             if(cont)
             {
-                //cpu.instruction_pointer = cpu.previous_ip;
+                //this.instruction_pointer = this.previous_ip;
                 this.movsb();
             }
         }
         else
         {
-            cpu.safe_write8(dest, cpu.safe_read8(src));
-            cpu.add_reg_asize(reg_edi, size);
-            cpu.add_reg_asize(reg_esi, size);
+            this.safe_write8(dest, this.safe_read8(src));
+            this.add_reg_asize(reg_edi, size);
+            this.add_reg_asize(reg_esi, size);
         }
-        cpu.diverged();
+        this.diverged();
     }
 
     public movsw()
     {
         var cpu = this;
-        var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
-        var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
-        var size = cpu.flags & flag_direction ? -2 : 2;
+        var src = this.get_seg_prefix(reg_ds) + this.get_reg_asize(reg_esi) | 0;
+        var dest = this.get_seg(reg_es) + this.get_reg_asize(reg_edi) | 0;
+        var size = this.flags & flag_direction ? -2 : 2;
 
-        if(cpu.prefixes & PREFIX_MASK_REP)
+        if(this.prefixes & PREFIX_MASK_REP)
         {
-            var count = cpu.get_reg_asize(reg_ecx) >>> 0;
+            var count = this.get_reg_asize(reg_ecx) >>> 0;
             if(count === 0) return;
             var cont = false;
             var start_count = count;
@@ -6311,88 +6310,88 @@ export class CPU
             if(!(dest & 1) && !(src & 1))
             {
                 var single_size = size < 0 ? -1 : 1;
-                var phys_src = cpu.translate_address_read(src) >> 1;
-                var phys_dest = cpu.translate_address_write(dest) >> 1;
-                if(cpu.paging)
+                var phys_src = this.translate_address_read(src) >> 1;
+                var phys_dest = this.translate_address_write(dest) >> 1;
+                if(this.paging)
                 {
                     cycle_counter = StringX.string_get_cycle_count2(size, src, dest);
                 }
                 do
                 {
-                    cpu.write_aligned16(phys_dest, cpu.read_aligned16(phys_src));
+                    this.write_aligned16(phys_dest, this.read_aligned16(phys_src));
                     phys_dest += single_size;
                     phys_src += single_size;
                     cont = --count !== 0;
                 }
                 while(cont && cycle_counter--);
                 var diff = size * (start_count - count) | 0;
-                cpu.add_reg_asize(reg_edi, diff);
-                cpu.add_reg_asize(reg_esi, diff);
-                cpu.set_ecx_asize(count);
-                cpu.timestamp_counter += start_count - count;
+                this.add_reg_asize(reg_edi, diff);
+                this.add_reg_asize(reg_esi, diff);
+                this.set_ecx_asize(count);
+                this.timestamp_counter += start_count - count;
             }
             else
             {
                 do
                 {
-                    cpu.safe_write16(dest, cpu.safe_read16(src));
+                    this.safe_write16(dest, this.safe_read16(src));
                     dest += size;
-                    cpu.add_reg_asize(reg_edi, size);
+                    this.add_reg_asize(reg_edi, size);
                     src += size;
-                    cpu.add_reg_asize(reg_esi, size);
-                    cont = cpu.decr_ecx_asize() !== 0;
+                    this.add_reg_asize(reg_esi, size);
+                    cont = this.decr_ecx_asize() !== 0;
                 }
                 while(cont && cycle_counter--);
             }
             if(cont)
             {
-                //cpu.instruction_pointer = cpu.previous_ip;
+                //this.instruction_pointer = this.previous_ip;
                 this.movsw();
             }
         }
         else
         {
-            cpu.safe_write16(dest, cpu.safe_read16(src));
-            cpu.add_reg_asize(reg_edi, size);
-            cpu.add_reg_asize(reg_esi, size);
+            this.safe_write16(dest, this.safe_read16(src));
+            this.add_reg_asize(reg_edi, size);
+            this.add_reg_asize(reg_esi, size);
         }
-        cpu.diverged();
+        this.diverged();
     }
 
     public movsd()
     {
         var cpu = this;
-        //if(cpu.prefixes & PREFIX_MASK_REP)
+        //if(this.prefixes & PREFIX_MASK_REP)
         // if(false)
         // {
         //     // often used by memcpy, well worth optimizing
-        //     //   using cpu.mem32s.set
-        //     var ds = cpu.get_seg_prefix(reg_ds),
-        //         src = ds + cpu.get_reg_asize(reg_esi) | 0,
-        //         es = cpu.get_seg(reg_es),
-        //         dest = es + cpu.get_reg_asize(reg_edi) | 0,
-        //         count = cpu.get_reg_asize(reg_ecx) >>> 0;
+        //     //   using this.mem32s.set
+        //     var ds = this.get_seg_prefix(reg_ds),
+        //         src = ds + this.get_reg_asize(reg_esi) | 0,
+        //         es = this.get_seg(reg_es),
+        //         dest = es + this.get_reg_asize(reg_edi) | 0,
+        //         count = this.get_reg_asize(reg_ecx) >>> 0;
 
         //     if(!count)
         //     {
         //         return;
         //     }
 
-        //     // must be page-aligned if cpu.paging is enabled
+        //     // must be page-aligned if this.paging is enabled
         //     // and dword-aligned in general
-        //     var align_mask = cpu.paging ? 0xFFF : 3;
+        //     var align_mask = this.paging ? 0xFFF : 3;
 
         //     if((dest & align_mask) === 0 &&
         //     (src & align_mask) === 0 &&
         //     // If df is set, alignment works a different
         //     // This should be unlikely
-        //     (cpu.flags & flag_direction) === 0)
+        //     (this.flags & flag_direction) === 0)
         //     {
         //         var cont = false;
-        //         if(cpu.paging)
+        //         if(this.paging)
         //         {
-        //             src = cpu.translate_address_read(src);
-        //             dest = cpu.translate_address_write(dest);
+        //             src = this.translate_address_read(src);
+        //             dest = this.translate_address_write(dest);
 
         //             if(count > 0x400)
         //             {
@@ -6401,21 +6400,21 @@ export class CPU
         //             }
         //         }
 
-        //         if(!cpu.io.in_mmap_range(src, count) &&
-        //             !cpu.io.in_mmap_range(dest, count))
+        //         if(!this.io.in_mmap_range(src, count) &&
+        //             !this.io.in_mmap_range(dest, count))
         //         {
         //             var diff = count << 2;
-        //             cpu.add_reg_asize(reg_ecx, -count);
-        //             cpu.add_reg_asize(reg_edi, diff);
-        //             cpu.add_reg_asize(reg_esi, diff);
+        //             this.add_reg_asize(reg_ecx, -count);
+        //             this.add_reg_asize(reg_edi, diff);
+        //             this.add_reg_asize(reg_esi, diff);
 
         //             dest >>= 2;
         //             src >>= 2;
-        //             cpu.write_blob32(cpu.mem32s.subarray(src, src + count), dest);
+        //             this.write_blob32(this.mem32s.subarray(src, src + count), dest);
 
         //             if(cont)
         //             {
-        //                 //cpu.instruction_pointer = cpu.previous_ip;
+        //                 //this.instruction_pointer = this.previous_ip;
         //                 this.movsd();
         //             }
 
@@ -6424,13 +6423,13 @@ export class CPU
         //     }
         // }
 
-        var src = cpu.get_seg_prefix(reg_ds) + cpu.get_reg_asize(reg_esi) | 0;
-        var dest = cpu.get_seg(reg_es) + cpu.get_reg_asize(reg_edi) | 0;
-        var size = cpu.flags & flag_direction ? -4 : 4;
+        var src = this.get_seg_prefix(reg_ds) + this.get_reg_asize(reg_esi) | 0;
+        var dest = this.get_seg(reg_es) + this.get_reg_asize(reg_edi) | 0;
+        var size = this.flags & flag_direction ? -4 : 4;
 
-        if(cpu.prefixes & PREFIX_MASK_REP)
+        if(this.prefixes & PREFIX_MASK_REP)
         {
-            var count = cpu.get_reg_asize(reg_ecx) >>> 0;
+            var count = this.get_reg_asize(reg_ecx) >>> 0;
             if(count === 0) return;
             var cont = false;
             var start_count = count;
@@ -6438,36 +6437,36 @@ export class CPU
             if(!(dest & 3) && !(src & 3))
             {
                 var single_size = size < 0 ? -1 : 1;
-                var phys_src = cpu.translate_address_read(src) >>> 2;
-                var phys_dest = cpu.translate_address_write(dest) >>> 2;
-                if(cpu.paging)
+                var phys_src = this.translate_address_read(src) >>> 2;
+                var phys_dest = this.translate_address_write(dest) >>> 2;
+                if(this.paging)
                 {
                     cycle_counter = StringX.string_get_cycle_count2(size, src, dest);
                 }
                 do
                 {
-                    cpu.write_aligned32(phys_dest, cpu.read_aligned32(phys_src));
+                    this.write_aligned32(phys_dest, this.read_aligned32(phys_src));
                     phys_dest += single_size;
                     phys_src += single_size;
                     cont = --count !== 0;
                 }
                 while(cont && cycle_counter--);
                 var diff = size * (start_count - count) | 0;
-                cpu.add_reg_asize(reg_edi, diff);
-                cpu.add_reg_asize(reg_esi, diff);
-                cpu.set_ecx_asize(count);
-                cpu.timestamp_counter += start_count - count;
+                this.add_reg_asize(reg_edi, diff);
+                this.add_reg_asize(reg_esi, diff);
+                this.set_ecx_asize(count);
+                this.timestamp_counter += start_count - count;
             }
             else
             {
                 do
                 {
-                    cpu.safe_write32(dest, cpu.safe_read32s(src));
+                    this.safe_write32(dest, this.safe_read32s(src));
                     dest += size;
-                    cpu.add_reg_asize(reg_edi, size);
+                    this.add_reg_asize(reg_edi, size);
                     src += size;
-                    cpu.add_reg_asize(reg_esi, size);
-                    cont = cpu.decr_ecx_asize() !== 0;
+                    this.add_reg_asize(reg_esi, size);
+                    cont = this.decr_ecx_asize() !== 0;
                 }
                 while(cont && cycle_counter--);
             }
@@ -6479,11 +6478,11 @@ export class CPU
         }
         else
         {
-            cpu.safe_write32(dest, cpu.safe_read32s(src));
-            cpu.add_reg_asize(reg_edi, size);
-            cpu.add_reg_asize(reg_esi, size);
+            this.safe_write32(dest, this.safe_read32s(src));
+            this.add_reg_asize(reg_edi, size);
+            this.add_reg_asize(reg_esi, size);
         }
-        cpu.diverged();
+        this.diverged();
     }
 
     // former arith.ts
